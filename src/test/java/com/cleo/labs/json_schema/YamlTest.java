@@ -41,13 +41,13 @@ public class YamlTest {
                              .setURITranslatorConfiguration(
                                  URITranslatorConfiguration.newBuilder()
                                  .setNamespace(schema_uri)
-                                 .addPathRedirect(schema_uri, "file:"+schema_dir+"/")
+                                 .addPathRedirect(schema_uri, "file:///G:/IdeaProjects/rest-api/schema/")
                                  .freeze())
                              .freeze())
                          .freeze();
 
         yaml_factory = new YAMLFactory();
-        connection_schema = schema("connection_schema.schema");
+        connection_schema = schema("connection.schema");
     }
 
     static JsonSchema schema(String fn) throws ProcessingException, IOException {
@@ -72,7 +72,7 @@ public class YamlTest {
 
     @Test
     public void test1() throws Exception {
-        String content = getResource("as2-connection_schema.json");
+        String content = getResource("as2-connection.json");
         JsonNode node = new ObjectMapper().readTree(content);
         assertNotNull(node);
         //System.out.println(node);
@@ -81,7 +81,7 @@ public class YamlTest {
 
     @Test
     public void test2() throws Exception {
-        String content = getResource("as2-connection_schema.yaml");
+        String content = getResource("as2-connection.yaml");
         JsonNode node = new ObjectMapper().readTree(yaml_factory.createParser(content));
         assertNotNull(node);
         //System.out.println(node);
