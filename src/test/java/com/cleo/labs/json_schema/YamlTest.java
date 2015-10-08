@@ -95,7 +95,7 @@ public class YamlTest {
         assertSuccess(connection_schema.validate(node));
     }
 
-    // POSTS a new cert and then validates the schema
+    // POSTS a new cert and validates the schema
     @Test
     public void liveExpTest() throws Exception {
         String jsonRequest = getResource("as2-basic-connection.json");
