@@ -5,13 +5,13 @@ import static com.jayway.restassured.RestAssured.given;
 
 import java.io.File;
 import java.io.IOException;
+
 import org.json.JSONObject;
+import org.testng.Assert;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jayway.restassured.response.Response;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +26,8 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 public class YamlTest {
 
@@ -35,7 +37,7 @@ public class YamlTest {
     static YAMLFactory       yaml_factory;
     static JsonSchema        connection_schema;
 
-    @BeforeClass
+    @BeforeTest
     public static void setup() throws Exception {
         schema_uri = "http://cleo.com/schemas/";
         schema_dir = new File("../rest-api/schema/").getCanonicalPath();
@@ -97,55 +99,18 @@ public class YamlTest {
     @Test
     public void liveExpTest() throws Exception {
         String jsonRequest = getResource("as2-basic-connection.json");
-        String content = (POST("administrator", "Admin", jsonRequest, "http://162.243.186.156:5080/api/connections")).toString();
-        JsonNode node = new ObjectMapper().readTree(content);
+        JsonNode node = new ObjectMapper().readTree(POST("administrator", "Admin", jsonRequest, 201, "http://162.243.186.156:5080/api/connections"));
         assertNotNull(node);
-        System.out.println(node);
         assertSuccess(connection_schema.validate(node));
-        System.out.println(node.get("alias"));
 
     }
 
-    public static JSONObject POST(String userName, String userPass, String requestJson, String url) {
+    public static String POST(String userName, String userPass, String requestJson, int expStatus, String url) {
         Response resp = given().auth().preemptive().basic(userName, userPass).contentType("application/json; charset=UTF-8").and().body(requestJson).post(url);
+        Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
-        return jsonResponse;
+        return jsonResponse.toString();
 
     };
-
-    // If this works, it should live in a helper class
-    public JsonNode responseAsNode(com.jayway.restassured.response.Response response) {
-        ObjectNode node = JsonNodeFactory.instance.objectNode();
-        node.set("status", JsonNodeFactory.instance.numberNode(response.statusCode()));
-        node.set("type", JsonNodeFactory.instance.textNode(response.contentType()));
-        ObjectNode headers = JsonNodeFactory.instance.objectNode();
-        response.getHeaders().forEach((h)->headers.set(h.getName(),JsonNodeFactory.instance.textNode(h.getValue())));
-        if (headers.size()>0) {
-            node.set("headers", headers);
-        }
-        ObjectNode cookies = JsonNodeFactory.instance.objectNode();
-        response.getCookies().forEach((name,value)->cookies.set(name,JsonNodeFactory.instance.textNode(value)));
-        if (cookies.size()>0) {
-            node.set("cookies", cookies);
-        }
-        JsonNode body = null;
-        if (response.contentType().equals("application/json")) {
-            try {
-                body = new ObjectMapper().readTree(response.asByteArray());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        if (body==null) {
-            String text = response.asString();
-            if (text.matches(".*[^\\p{Print}\\p{Space}].*")) {
-                body = JsonNodeFactory.instance.binaryNode(response.asByteArray());
-            } else {
-                body = JsonNodeFactory.instance.textNode(text);
-            }
-        }
-        node.set("body", body);
-        return node;
-    }
 
 }
