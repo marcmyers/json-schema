@@ -163,6 +163,9 @@ public class PocTest {
         // Attempt a delete to clean up after the test
         DELETE("administrator", "Admin", putNode.get("id").asText(), 204, "http://162.243.186.156:5080/api/connections/");
 
+        // Attempt a GET to ensure that it's been deleted
+        GET("administrator", "Admin", putNode.get("id").asText(), 404, "http://162.243.186.156:5080/api/connections/");
+
     }
 
     public static String POST(String userName, String userPass, String requestJson, int expStatus, String url) {
