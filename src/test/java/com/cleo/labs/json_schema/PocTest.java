@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import com.cleo.lexicom.external.pojo.Connect;
 import com.cleo.lexicom.external.pojo.Connection;
+import com.jayway.restassured.RestAssured;
 import org.json.JSONObject;
 import org.testng.Assert;
 
@@ -56,6 +57,10 @@ public class PocTest {
 
         connection_schema = schema("connection.schema");
 
+        // Setup the default URL and API base path to use throughout the test
+        RestAssured.baseURI = "http://162.243.186.156:5080";
+        RestAssured.basePath = "/api/";
+
     }
 
     static JsonSchema schema(String fn) throws ProcessingException, IOException {
@@ -94,7 +99,7 @@ public class PocTest {
         JsonNode node = new ObjectMapper().readTree(POST("administrator", "Admin", jsonRequest, 201, "http://162.243.186.156:5080/api/connections"));
         assertNotNull(node);
         assertSuccess(connection_schema.validate(node));
-        DELETE("administrator", "Admin", node.get("id").asText(), 204, "http://162.243.186.156:5080/api/connections/");
+        DELETE("administrator", "Admin", node.get("id").asText(), 204, "/connections/");
 
     }
 
@@ -106,7 +111,7 @@ public class PocTest {
 
         // Attempt a POST to generate a new connection
         String postResp =
-                POST("administrator", "Admin", newConnection, 201, "http://162.243.186.156:5080/api/connections");
+                POST("administrator", "Admin", newConnection, 201, "/connections");
         JsonNode postNode = new ObjectMapper().readTree(postResp);
 
         // Verify that the response is not null
@@ -121,7 +126,7 @@ public class PocTest {
 
         // Attempt a GET to verify permanence, validate the JSON returned against the connection schema
         String getResp =
-                GET("administrator", "Admin", postNode.get("id").asText(), 200, "http://162.243.186.156:5080/api/connections/");
+                GET("administrator", "Admin", postNode.get("id").asText(), 200, "/connections/");
         JsonNode getNode = new ObjectMapper().readTree(getResp);
         assertNotNull(getNode);
         assertSuccess(connection_schema.validate(getNode));
@@ -142,7 +147,7 @@ public class PocTest {
 
         // Attempt to do a PUT on the already POSTED connection to update the trading partner's URL
         String putResp =
-                PUT("administrator", "Admin", postedConnection, 200, "http://162.243.186.156:5080/api/connections/" + postedConnection.getId());
+                PUT("administrator", "Admin", postedConnection, 200, "/connections/" + postedConnection.getId());
         JsonNode putNode =
                 new ObjectMapper().readTree(putResp);
         assertNotNull(putNode);
@@ -155,16 +160,16 @@ public class PocTest {
 
         // Attempt the final GET to verify permanence, validate the JSON returned against the connection schema
         String finalGet =
-                GET("administrator", "Admin", putNode.get("id").asText(), 200, "http://162.243.186.156:5080/api/connections/");
+                GET("administrator", "Admin", putNode.get("id").asText(), 200, "/connections/");
         JsonNode finalNode = new ObjectMapper().readTree(finalGet);
         assertNotNull(finalNode);
         assertSuccess(connection_schema.validate(finalNode));
 
         // Attempt a delete to clean up after the test
-        DELETE("administrator", "Admin", putNode.get("id").asText(), 204, "http://162.243.186.156:5080/api/connections/");
+        DELETE("administrator", "Admin", putNode.get("id").asText(), 204, "/connections/");
 
         // Attempt a GET to ensure that it's been deleted
-        GET("administrator", "Admin", putNode.get("id").asText(), 404, "http://162.243.186.156:5080/api/connections/");
+        GET("administrator", "Admin", putNode.get("id").asText(), 404, "/connections/");
 
     }
 
