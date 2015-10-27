@@ -12,13 +12,10 @@ import com.jayway.restassured.RestAssured;
 import org.json.JSONObject;
 import org.testng.Assert;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jayway.restassured.response.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
@@ -27,7 +24,6 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -96,42 +92,35 @@ public class PocTest {
     @Test
     public void liveExpTest() throws Exception {
         String jsonRequest = getResource("as2-basic-connection.json");
-        // JsonNode node = new ObjectMapper().readTree(POST("administrator", "Admin", jsonRequest, 201, "/connections"));
-        JsonNode node = new ObjectMapper().readTree(POST(jsonRequest, 201, "/connections"));
-        Assert.assertNotNull(node);
-        assertSuccess(connection_schema.validate(node));
-        DELETE(node.get("id").asText(), 204, "/connections/");
+        JsonNode node = SchemaValidation(Post(jsonRequest, 201, "/connections"), "connection");
+        Delete(node.get("id").asText(), 204, "/connections/");
 
     }
 
     // POSTS a new connection using POJOs and validates the Responses using the schema
-    // Then, attempts to do a PUT on the connection to make it ready
+    // Then, attempts to do a Put on the connection to make it ready
     @Test
     public void liveExpTestPOJO() throws Exception {
         Connection newConnection = new Connection();
         newConnection.setType("as2");
 
         // Attempt a POST to generate a new connection
-        String postResp = POST(newConnection, 201, "/connections");
-        JsonNode postNode = new ObjectMapper().readTree(postResp);
+        String postResp = Post(newConnection, 201, "/connections");
 
-        // Verify that the response is not null
-        Assert.assertNotNull(postNode);
-
-        // Verify the response against the schema
-        assertSuccess(connection_schema.validate(postNode));
+        // Validate the response against the schema
+        JsonNode postNode = SchemaValidation(postResp, "connection");
 
         // Verify content pertinent to the test, the connection should not be ready
         Assert.assertEquals(postNode.get("ready").asText(), "false");
         Assert.assertEquals(postNode.get("notReadyReason").asText(), "Server Address is required.");
 
-        // Attempt a GET to verify permanence, validate the JSON returned against the connection schema
-        String getResp = GET(postNode.get("id").asText(), 200, "/connections/");
+        // Attempt a Get to verify permanence, validate the JSON returned against the connection schema
+        String getResp = Get(postNode.get("id").asText(), 200, "/connections/");
         JsonNode getNode = new ObjectMapper().readTree(getResp);
         Assert.assertNotNull(getNode);
         assertSuccess(connection_schema.validate(getNode));
 
-        // Prep the connection for an attempted PUT
+        // Prep the connection for an attempted Put
         Connection postedConnection = new Connection();
         postedConnection = new ObjectMapper().readValue(postResp, Connection.class);
         Connect localHost = new Connect();
@@ -140,36 +129,47 @@ public class PocTest {
         // Set the value needed to make the connection ready
         postedConnection.setConnect(localHost);
 
-        // Null meta data, this data isn't valid when sent with a PUT
+        // Null meta data, this data isn't valid when sent with a Put
         postedConnection.setMeta(null);
 
-        // Attempt to do a PUT on the already POSTED connection to update the trading partner's URL
-        String putResp = PUT(postedConnection, 200, "/connections/" + postedConnection.getId());
-        JsonNode putNode = new ObjectMapper().readTree(putResp);
-        Assert.assertNotNull(putNode);
+        // Attempt to do a Put on the already POSTED connection to update the trading partner's URL
+        String putResp = Put(postedConnection, 200, "/connections/" + postedConnection.getId());
+        JsonNode putNode = SchemaValidation(putResp, "connection");
 
-        // Verify the response against the schema
-        assertSuccess(connection_schema.validate(putNode));
-
-        // Verify that the content has changed due to the PUT
+        // Verify that the content has changed due to the Put
         Assert.assertEquals(putNode.get("ready").asText(), "true");
 
-        // Attempt the final GET to verify permanence, validate the JSON returned against the connection schema
-        String finalGet = GET(putNode.get("id").asText(), 200, "/connections/");
-        JsonNode finalNode = new ObjectMapper().readTree(finalGet);
-        Assert.assertNotNull(finalNode);
-        assertSuccess(connection_schema.validate(finalNode));
+        // Attempt the final Get to verify permanence, validate the JSON returned against the connection schema
+        String finalGet = Get(putNode.get("id").asText(), 200, "/connections/");
+        JsonNode finalNode = SchemaValidation(finalGet, "connection");
 
         // Attempt a delete to clean up after the test
-        DELETE(putNode.get("id").asText(), 204, "/connections/");
+        Delete(putNode.get("id").asText(), 204, "/connections/");
 
-        // Attempt a GET to ensure that it's been deleted
-        GET(putNode.get("id").asText(), 404, "/connections/");
+        // Attempt a Get to ensure that it's been deleted
+        Get(putNode.get("id").asText(), 404, "/connections/");
+
+    }
+
+    // Attempt to validate the response against the schema
+    public static JsonNode SchemaValidation(String reqResp, String schemaType) throws IOException, ProcessingException {
+        JsonNode myNode = new ObjectMapper().readTree(reqResp);
+
+        // Verify that the response is not null
+        Assert.assertNotNull(myNode);
+
+        // Verify the response against the schema
+        if (schemaType == "connection") {
+            assertSuccess(connection_schema.validate(myNode));
+
+        }
+
+        return myNode;
 
     }
 
     // public static String POST(String requestJson, int expStatus, String url) {
-    public static String POST(String requestJson, int expStatus, String url) {
+    public static String Post(String requestJson, int expStatus, String url) {
         Response resp = given().contentType("application/json").and().body(requestJson).post(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
@@ -177,7 +177,7 @@ public class PocTest {
 
     }
 
-    public static String POST(Object reqObj, int expStatus, String url) {
+    public static String Post(Object reqObj, int expStatus, String url) {
         JSONObject jsonRequest = new JSONObject(reqObj);
         Response resp = given().contentType("application/json").and().body(jsonRequest.toString()).post(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
@@ -186,7 +186,7 @@ public class PocTest {
 
     }
 
-    public static String PUT(Object reqObj, int expStatus, String url) {
+    public static String Put(Object reqObj, int expStatus, String url) {
         JSONObject jsonRequest = new JSONObject(reqObj);
         Response resp = given().contentType("application/json").and().body(jsonRequest.toString()).put(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
@@ -195,7 +195,7 @@ public class PocTest {
 
     }
 
-    public static String GET(String conId, int expStatus, String url) {
+    public static String Get(String conId, int expStatus, String url) {
         Response resp = given().when().get(url + conId);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
@@ -203,7 +203,7 @@ public class PocTest {
 
     }
 
-    public static void DELETE(String conId, int expStatus, String url) {
+    public static void Delete(String conId, int expStatus, String url) {
         Response resp = given().and().delete(url + conId);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
 
