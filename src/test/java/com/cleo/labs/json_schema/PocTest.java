@@ -1,7 +1,7 @@
 package com.cleo.labs.json_schema;
 
-import static org.junit.Assert.*;
 import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.preemptive;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,9 +57,10 @@ public class PocTest {
 
         connection_schema = schema("connection.schema");
 
-        // Setup the default URL and API base path to use throughout the test
+        // Setup the default URL and API base path to use throughout the test, as well as credentials
         RestAssured.baseURI = "http://162.243.186.156:5080";
         RestAssured.basePath = "/api/";
+        RestAssured.authentication = preemptive().basic("administrator", "Admin");
 
     }
 
@@ -78,7 +79,7 @@ public class PocTest {
             System.out.println(report);
 
         }
-        assertTrue(report.isSuccess());
+        Assert.assertTrue(report.isSuccess());
 
     }
 
@@ -87,7 +88,7 @@ public class PocTest {
     public void mockTest() throws Exception {
         String content = getResource("as2-connection.json");
         JsonNode node = new ObjectMapper().readTree(content);
-        assertNotNull(node);
+        Assert.assertNotNull(node);
         assertSuccess(connection_schema.validate(node));
 
     }
@@ -96,10 +97,11 @@ public class PocTest {
     @Test
     public void liveExpTest() throws Exception {
         String jsonRequest = getResource("as2-basic-connection.json");
-        JsonNode node = new ObjectMapper().readTree(POST("administrator", "Admin", jsonRequest, 201, "http://162.243.186.156:5080/api/connections"));
-        assertNotNull(node);
+        // JsonNode node = new ObjectMapper().readTree(POST("administrator", "Admin", jsonRequest, 201, "/connections"));
+        JsonNode node = new ObjectMapper().readTree(POST(jsonRequest, 201, "/connections"));
+        Assert.assertNotNull(node);
         assertSuccess(connection_schema.validate(node));
-        DELETE("administrator", "Admin", node.get("id").asText(), 204, "/connections/");
+        DELETE(node.get("id").asText(), 204, "/connections/");
 
     }
 
@@ -111,11 +113,11 @@ public class PocTest {
 
         // Attempt a POST to generate a new connection
         String postResp =
-                POST("administrator", "Admin", newConnection, 201, "/connections");
+                POST(newConnection, 201, "/connections");
         JsonNode postNode = new ObjectMapper().readTree(postResp);
 
         // Verify that the response is not null
-        assertNotNull(postNode);
+        Assert.assertNotNull(postNode);
 
         // Verify the response against the schema
         assertSuccess(connection_schema.validate(postNode));
@@ -125,10 +127,9 @@ public class PocTest {
         Assert.assertEquals(postNode.get("notReadyReason").asText(), "Server Address is required.");
 
         // Attempt a GET to verify permanence, validate the JSON returned against the connection schema
-        String getResp =
-                GET("administrator", "Admin", postNode.get("id").asText(), 200, "/connections/");
+        String getResp = GET(postNode.get("id").asText(), 200, "/connections/");
         JsonNode getNode = new ObjectMapper().readTree(getResp);
-        assertNotNull(getNode);
+        Assert.assertNotNull(getNode);
         assertSuccess(connection_schema.validate(getNode));
 
         // Prep the connection for an attempted PUT
@@ -146,11 +147,9 @@ public class PocTest {
         postedConnection.setMeta(null);
 
         // Attempt to do a PUT on the already POSTED connection to update the trading partner's URL
-        String putResp =
-                PUT("administrator", "Admin", postedConnection, 200, "/connections/" + postedConnection.getId());
-        JsonNode putNode =
-                new ObjectMapper().readTree(putResp);
-        assertNotNull(putNode);
+        String putResp = PUT(postedConnection, 200, "/connections/" + postedConnection.getId());
+        JsonNode putNode = new ObjectMapper().readTree(putResp);
+        Assert.assertNotNull(putNode);
 
         // Verify the response against the schema
         assertSuccess(connection_schema.validate(putNode));
@@ -159,62 +158,58 @@ public class PocTest {
         Assert.assertEquals(putNode.get("ready").asText(), "true");
 
         // Attempt the final GET to verify permanence, validate the JSON returned against the connection schema
-        String finalGet =
-                GET("administrator", "Admin", putNode.get("id").asText(), 200, "/connections/");
+        String finalGet = GET(putNode.get("id").asText(), 200, "/connections/");
         JsonNode finalNode = new ObjectMapper().readTree(finalGet);
-        assertNotNull(finalNode);
+        Assert.assertNotNull(finalNode);
         assertSuccess(connection_schema.validate(finalNode));
 
         // Attempt a delete to clean up after the test
-        DELETE("administrator", "Admin", putNode.get("id").asText(), 204, "/connections/");
+        DELETE(putNode.get("id").asText(), 204, "/connections/");
 
         // Attempt a GET to ensure that it's been deleted
-        GET("administrator", "Admin", putNode.get("id").asText(), 404, "/connections/");
+        GET(putNode.get("id").asText(), 404, "/connections/");
 
     }
 
-    public static String POST(String userName, String userPass, String requestJson, int expStatus, String url) {
-        Response resp =
-                given().auth().preemptive().basic(userName, userPass).contentType("application/json; charset=UTF-8").and().body(requestJson).post(url);
+    // public static String POST(String userName, String userPass, String requestJson, int expStatus, String url) {
+    public static String POST(String requestJson, int expStatus, String url) {
+        System.out.println(requestJson);
+        Response resp = given().contentType("application/json").and().body(requestJson).post(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
         return jsonResponse.toString();
 
     }
 
-    public static String POST(String userName, String userPass, Object reqObj, int expStatus, String url) {
+    public static String POST(Object reqObj, int expStatus, String url) {
         Connection requestedCon = ((Connection)reqObj);
         JSONObject jsonRequest = new JSONObject(requestedCon);
-        Response resp =
-                given().auth().preemptive().basic(userName, userPass).contentType("application/json; charset=UTF-8").and().body(jsonRequest.toString()).post(url);
+        Response resp = given().contentType("application/json").and().body(jsonRequest.toString()).post(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
         return jsonResponse.toString();
 
     }
 
-    public static String PUT(String userName, String userPass, Connection reqCon, int expStatus, String url) {
+    public static String PUT(Connection reqCon, int expStatus, String url) {
         JSONObject jsonRequest = new JSONObject(reqCon);
-        Response resp =
-                given().auth().preemptive().basic(userName, userPass).contentType("application/json; charset=UTF-8").and().body(jsonRequest.toString()).put(url);
+        Response resp = given().contentType("application/json").and().body(jsonRequest.toString()).put(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
         return jsonResponse.toString();
 
     }
 
-    public static String GET(String userName, String userPass, String conId, int expStatus, String url) {
-        Response resp =
-                given().auth().preemptive().basic(userName, userPass).when().get(url + conId);
+    public static String GET(String conId, int expStatus, String url) {
+        Response resp = given().when().get(url + conId);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
         return jsonResponse.toString();
 
     }
 
-    public static void DELETE(String userName, String userPass, String conId, int expStatus, String url) {
-        Response resp =
-                given().auth().preemptive().basic(userName, userPass).and().delete(url + conId);
+    public static void DELETE(String conId, int expStatus, String url) {
+        Response resp = given().and().delete(url + conId);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
 
     }
