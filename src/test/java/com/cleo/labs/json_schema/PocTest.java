@@ -33,7 +33,6 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 public class PocTest {
-
     static String            schema_uri;
     static String            schema_dir;
     static JsonSchemaFactory schema_factory;
@@ -57,7 +56,7 @@ public class PocTest {
 
         connection_schema = schema("connection.schema");
 
-        // Setup the default URL and API base path to use throughout the test, as well as credentials
+        // Setup the default URL, API base path, and Preemptive Credentials to use throughout the test
         RestAssured.baseURI = "http://162.243.186.156:5080";
         RestAssured.basePath = "/api/";
         RestAssured.authentication = preemptive().basic("administrator", "Admin");
@@ -93,7 +92,7 @@ public class PocTest {
 
     }
 
-    // POSTS a new cert and validates the schema
+    // POSTS a new connection using a JSON file and validates the schema
     @Test
     public void liveExpTest() throws Exception {
         String jsonRequest = getResource("as2-basic-connection.json");
@@ -105,15 +104,15 @@ public class PocTest {
 
     }
 
-    // POSTS a new cert using POJOs and validates the Responses using the schema
+    // POSTS a new connection using POJOs and validates the Responses using the schema
+    // Then, attempts to do a PUT on the connection to make it ready
     @Test
     public void liveExpTestPOJO() throws Exception {
         Connection newConnection = new Connection();
         newConnection.setType("as2");
 
         // Attempt a POST to generate a new connection
-        String postResp =
-                POST(newConnection, 201, "/connections");
+        String postResp = POST(newConnection, 201, "/connections");
         JsonNode postNode = new ObjectMapper().readTree(postResp);
 
         // Verify that the response is not null
@@ -134,10 +133,8 @@ public class PocTest {
 
         // Prep the connection for an attempted PUT
         Connection postedConnection = new Connection();
-        postedConnection =
-                new ObjectMapper().readValue(postResp, Connection.class);
-        Connect localHost =
-                new Connect();
+        postedConnection = new ObjectMapper().readValue(postResp, Connection.class);
+        Connect localHost = new Connect();
         localHost.setUrl("http://localhost:5080/as2");
 
         // Set the value needed to make the connection ready
@@ -171,9 +168,8 @@ public class PocTest {
 
     }
 
-    // public static String POST(String userName, String userPass, String requestJson, int expStatus, String url) {
+    // public static String POST(String requestJson, int expStatus, String url) {
     public static String POST(String requestJson, int expStatus, String url) {
-        System.out.println(requestJson);
         Response resp = given().contentType("application/json").and().body(requestJson).post(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
@@ -182,8 +178,7 @@ public class PocTest {
     }
 
     public static String POST(Object reqObj, int expStatus, String url) {
-        Connection requestedCon = ((Connection)reqObj);
-        JSONObject jsonRequest = new JSONObject(requestedCon);
+        JSONObject jsonRequest = new JSONObject(reqObj);
         Response resp = given().contentType("application/json").and().body(jsonRequest.toString()).post(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
@@ -191,8 +186,8 @@ public class PocTest {
 
     }
 
-    public static String PUT(Connection reqCon, int expStatus, String url) {
-        JSONObject jsonRequest = new JSONObject(reqCon);
+    public static String PUT(Object reqObj, int expStatus, String url) {
+        JSONObject jsonRequest = new JSONObject(reqObj);
         Response resp = given().contentType("application/json").and().body(jsonRequest.toString()).put(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
