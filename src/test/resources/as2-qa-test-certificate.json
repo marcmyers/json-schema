@@ -1,0 +1,11 @@
+{
+  "requestType":"generateCert",
+  "alias":"QA_TEST_JSON",
+  "dn":"cn=test,c=us",
+  "validity":"24 months",
+  "alg":"sha1",
+  "keyAlg":"rsa",
+  "keySize":2048,
+  "keyUsage":["digitalSignature"],
+  "password":"cleo"
+}
