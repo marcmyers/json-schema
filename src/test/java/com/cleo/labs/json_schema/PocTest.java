@@ -5,21 +5,16 @@ import static com.jayway.restassured.RestAssured.preemptive;
 
 import static com.jayway.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.cleo.lexicom.external.pojo.Connect;
-import com.cleo.lexicom.external.pojo.Connection;
-import com.cleo.lexicom.external.pojo.PostCert;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.jayway.restassured.RestAssured;
-import org.hamcrest.Matcher;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
 import org.skife.url.UrlSchemeRegistry;
 import org.testng.Assert;
@@ -28,7 +23,6 @@ import com.jayway.restassured.response.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
 import com.github.fge.jsonschema.core.load.uri.URITranslatorConfiguration;
@@ -90,6 +84,7 @@ public class PocTest {
     @BeforeTest
     public static void testSetup() {
         // Setup the default URL, API base path, and Preemptive Credentials to use throughout the test
+        // Later these can be set from a data provider, test xml file, and/or maven test profile
         RestAssured.baseURI = "http://162.243.186.156:5080";
         RestAssured.basePath = "/api/";
         RestAssured.authentication = preemptive().basic("administrator", "Admin");
@@ -130,14 +125,14 @@ public class PocTest {
     @Test
     public void liveConTest() throws Exception {
         String jsonRequest = getResource("as2-basic-connection.json");
-        JsonNode node = SchemaValidation(Post(jsonRequest, 201, "/connections"), "connection");
-        JsonNode getNode = SchemaValidation(Get(node.get("id").asText(), 200, "/connections/"), "connection");
+        JsonNode node = schemaValidation(Post(jsonRequest, 201, "/connections"), "connection");
+        JsonNode getNode = schemaValidation(Get(node.get("id").asText(), 200, "/connections/"), "connection");
         Delete(getNode.get("id").asText(), 204, "/connections/");
 
     }
 
     // Generates a new certificate using a request from a json file and then attempts to delete it
-    @Test
+    @Test(enabled = false)
     public void liveCertTest() throws Exception {
         String jsonRequest = getResource("as2-qa-test-certificate.json");
         // Remove later
@@ -145,54 +140,54 @@ public class PocTest {
         System.out.println("Json Post Response: " + postResponse);
         // Remove later
 
-        // JsonNode node = SchemaValidation(Post(jsonRequest, 201, "/certs"), "certificate");
-        JsonNode node = SchemaValidation(postResponse, "certificate");
+        // JsonNode node = schemaValidation(Post(jsonRequest, 201, "/certs"), "certificate");
+        JsonNode node = schemaValidation(postResponse, "certificate");
 
         Delete(node.get("id").asText(), 204, "/certs/");
 
     }
 
     // Generates a new certificate using a request generated from a POJO and then attempts to delete it
-    @Test
-    public void liveCertTestPOJO() throws Exception {
-        PostCert newCert = new PostCert();
-
+    @Test(enabled = true)
+    public void liveCertTestJsonObject() throws Exception {
         List<String> keyUsage = new ArrayList<String>();
         keyUsage.add("digitalSignature");
+        String randomName = RandomStringUtils.randomAlphabetic(10);
 
-        newCert.setRequestType("generateCert");
-        newCert.setAlias("QA_TEST_POJO");
-        newCert.setDn("cn=test,c=us");
-        newCert.setValidity("24 months");
-        newCert.setKeyAlg("rsa");
-        newCert.setKeySize(2048);
-        newCert.setKeyUsage(keyUsage);
-        newCert.setPassword("cleo");
+        JSONObject newCert = new JSONObject();
+        newCert.put("requestType", "generateCert");
+        newCert.put("alias", "QA_TEST_" + randomName.toUpperCase());
+        newCert.put("dn", "cn=test,c=us");
+        newCert.put("validity", "24 months");
+        newCert.put("keyAlg", "rsa");
+        newCert.put("keySize", 2048);
+        newCert.put("password", "cleo");
+        newCert.put("keyUsage", keyUsage);
+
+        System.out.println("JSONObject: " + newCert.toString());
 
         String postResponse = Post(newCert, 201, "/certs");
 
-        System.out.println("Pojo Post Response: " + postResponse);
-
-        JsonNode node = SchemaValidation(postResponse, "certificate");
+        JsonNode node = schemaValidation(postResponse, "certificate");
 
         Delete(node.get("id").asText(), 204, "/certs/");
 
     }
 
-    // POSTS a new connection using POJOs and validates the Responses using the schema
-    // Then, attempts to do a Put on the connection to make it ready
+    /*
+    POSTS a new connection, validates the Responses using the schema
+    Then, attempts to do a Put on the connection to make it ready
+    */
     @Test
-    public void liveConTestPOJO() throws Exception {
-        Connection newConnection = new Connection();
-        newConnection.setType("as2");
+    public void liveConPutTest() throws Exception {
+        JSONObject newConnection = new JSONObject();
+        newConnection.put("type", "as2");
 
         // Attempt a POST to generate a new connection
         String postResp = Post(newConnection, 201, "/connections");
 
         // Validate the response against the schema
-        JsonNode postNode = SchemaValidation(postResp, "connection");
-
-        // ((ObjectNode)postNode).put();
+        JsonNode postNode = schemaValidation(postResp, "connection");
 
         // Verify content pertinent to the test, the connection should not be ready
         Assert.assertEquals(postNode.get("ready").asText(), "false");
@@ -200,25 +195,16 @@ public class PocTest {
 
         // Attempt a Get to verify permanence, validate the JSON returned against the connection schema
         String getResp = Get(postNode.get("id").asText(), 200, "/connections/");
-        JsonNode getNode = new ObjectMapper().readTree(getResp);
-        Assert.assertNotNull(getNode);
-        // assertSuccess(connection_schema.validate(getNode));
+        JsonNode getNode = schemaValidation(getResp, "connection");
 
-        // Prep the connection for an attempted Put
-        Connection postedConnection = new Connection();
-        postedConnection = new ObjectMapper().readValue(postResp, Connection.class);
-        Connect localHost = new Connect();
-        localHost.setUrl("http://localhost:5080/as2");
-
-        // Set the value needed to make the connection ready
-        postedConnection.setConnect(localHost);
-
-        // Null meta data, this data isn't valid when sent with a Put
-        postedConnection.setMeta(null);
+        // Prep an ObjectNode to do a put on the Connection
+        ObjectNode postCon = (ObjectNode)getNode;
+        postCon.remove("meta");
+        postCon.putObject("connect").put("url", "http://localhost:5080/as2");
 
         // Attempt to do a Put on the already POSTED connection to update the trading partner's URL
-        String putResp = Put(postedConnection, 200, "/connections/" + postedConnection.getId());
-        JsonNode putNode = SchemaValidation(putResp, "connection");
+        String putResp = Put(postCon, 200, "/connections/" + getNode.get("id").asText());
+        JsonNode putNode = schemaValidation(putResp, "connection");
 
         // Verify that the content has changed due to the Put
         Assert.assertEquals(putNode.get("ready").asText(), "true");
@@ -226,7 +212,7 @@ public class PocTest {
 
         // Attempt the final Get to verify permanence, validate the JSON returned against the connection schema
         String finalGet = Get(putNode.get("id").asText(), 200, "/connections/");
-        JsonNode finalNode = SchemaValidation(finalGet, "connection");
+        JsonNode finalNode = schemaValidation(finalGet, "connection");
 
         // Attempt a delete to clean up after the test
         Delete(putNode.get("id").asText(), 204, "/connections/");
@@ -236,15 +222,14 @@ public class PocTest {
 
     }
 
-    // Attempt to validate the response against the schema
-    public static JsonNode SchemaValidation(String reqResp, String schemaType) throws IOException, ProcessingException {
+    // Attempt to validate the response against the schema and then return the JsonNode used for validation
+    public static JsonNode schemaValidation(String reqResp, String schemaType) throws IOException, ProcessingException {
         JsonNode myNode = new ObjectMapper().readTree(reqResp);
 
         // Verify that the response is not null
         Assert.assertNotNull(myNode);
 
-
-        // Verify the response against the schema
+        // Verify the response against the requested schema
         if (schemaType == "connection") {
             assertSuccess(connection_schema.validate(myNode));
 
@@ -266,8 +251,7 @@ public class PocTest {
     }
 
     public static String Post(Object reqObj, int expStatus, String url) {
-        JSONObject jsonRequest = new JSONObject(reqObj);
-        Response resp = given().contentType("application/json").and().body(jsonRequest.toString()).post(url);
+        Response resp = given().contentType("application/json").and().body(reqObj.toString()).post(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
         return jsonResponse.toString();
@@ -275,8 +259,7 @@ public class PocTest {
     }
 
     public static String Put(Object reqObj, int expStatus, String url) {
-        JSONObject jsonRequest = new JSONObject(reqObj);
-        Response resp = given().contentType("application/json").and().body(jsonRequest.toString()).put(url);
+        Response resp = given().contentType("application/json").and().body(reqObj.toString()).put(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);
         JSONObject jsonResponse = new JSONObject(resp.asString());
         return jsonResponse.toString();
