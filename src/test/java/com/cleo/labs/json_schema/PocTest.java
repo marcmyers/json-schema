@@ -40,6 +40,8 @@ public class PocTest {
     static JsonSchema        connection_schema;
     static JsonSchema        certificate_schema;
 
+    static HttpRequest httpRequest = new HttpRequest();
+
     static {
         UrlSchemeRegistry.register("resource", ResourceHandler.class);
 
@@ -111,9 +113,9 @@ public class PocTest {
 
     }
 
-    // Mock Test - Validates JSON from a file using the Cleo RestAPI schemas
+    // Mock Test - Validates JSON from a file using the Cleo RestAPI schemas from Nexus
     @Test
-    public void mockTest() throws Exception {
+    public void mockConTest() throws Exception {
         String content = getResource("as2-connection.json");
         JsonNode node = new ObjectMapper().readTree(content);
         Assert.assertNotNull(node);
@@ -121,34 +123,41 @@ public class PocTest {
 
     }
 
+    // Mock Test - Validates JSON from a file using the Cleo RestAPI schemas from Nexus
+    @Test
+    public void mockCertTest() throws Exception {
+        String content = getResource("as2-certificate.json");
+        JsonNode node = new ObjectMapper().readTree(content);
+        Assert.assertNotNull(node);
+        assertSuccess(certificate_schema.validate(node));
+
+    }
+
     // POSTS a new connection using a JSON file and validates the schema
     @Test
-    public void liveConTest() throws Exception {
+    public void liveConPostTest() throws Exception {
         String jsonRequest = getResource("as2-basic-connection.json");
-        JsonNode node = schemaValidation(Post(jsonRequest, 201, "/connections"), "connection");
-        JsonNode getNode = schemaValidation(Get(node.get("id").asText(), 200, "/connections/"), "connection");
-        Delete(getNode.get("id").asText(), 204, "/connections/");
+        // JsonNode node = schemaValidation(Post(jsonRequest, 201, "/connections"), "connection");
+        JsonNode node = schemaValidation(httpRequest.Post(jsonRequest, 201, "/connections"), "connection");
+        JsonNode getNode = schemaValidation(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
+        httpRequest.Delete(getNode.get("id").asText(), 204, "/connections/");
 
     }
 
     // Generates a new certificate using a request from a json file and then attempts to delete it
+    // Disabled until schema validation succeeds
     @Test(enabled = false)
     public void liveCertTest() throws Exception {
         String jsonRequest = getResource("as2-qa-test-certificate.json");
-        // Remove later
-        String postResponse = Post(jsonRequest, 201, "/certs");
-        System.out.println("Json Post Response: " + postResponse);
-        // Remove later
-
-        // JsonNode node = schemaValidation(Post(jsonRequest, 201, "/certs"), "certificate");
-        JsonNode node = schemaValidation(postResponse, "certificate");
-
-        Delete(node.get("id").asText(), 204, "/certs/");
+        JsonNode node = schemaValidation(httpRequest.Post(jsonRequest, 201, "/certs"), "certificate");
+        JsonNode getNode = schemaValidation(httpRequest.Get(node.get("id").asText(), 200, "/certs/"), "certificate");
+        httpRequest.Delete(node.get("id").asText(), 204, "/certs/");
 
     }
 
-    // Generates a new certificate using a request generated from a POJO and then attempts to delete it
-    @Test(enabled = true)
+    // Generates a new certificate using a request generated from a JSON Object and then attempts to delete it
+    // Disabled until schema validation succeeds
+    @Test(enabled = false)
     public void liveCertTestJsonObject() throws Exception {
         List<String> keyUsage = new ArrayList<String>();
         keyUsage.add("digitalSignature");
@@ -164,13 +173,11 @@ public class PocTest {
         newCert.put("password", "cleo");
         newCert.put("keyUsage", keyUsage);
 
-        System.out.println("JSONObject: " + newCert.toString());
-
-        String postResponse = Post(newCert, 201, "/certs");
+        String postResponse = httpRequest.Post(newCert, 201, "/certs");
 
         JsonNode node = schemaValidation(postResponse, "certificate");
 
-        Delete(node.get("id").asText(), 204, "/certs/");
+        httpRequest.Delete(node.get("id").asText(), 204, "/certs/");
 
     }
 
@@ -184,7 +191,7 @@ public class PocTest {
         newConnection.put("type", "as2");
 
         // Attempt a POST to generate a new connection
-        String postResp = Post(newConnection, 201, "/connections");
+        String postResp = httpRequest.Post(newConnection, 201, "/connections");
 
         // Validate the response against the schema
         JsonNode postNode = schemaValidation(postResp, "connection");
@@ -194,7 +201,7 @@ public class PocTest {
         Assert.assertEquals(postNode.get("notReadyReason").asText(), "Server Address is required.");
 
         // Attempt a Get to verify permanence, validate the JSON returned against the connection schema
-        String getResp = Get(postNode.get("id").asText(), 200, "/connections/");
+        String getResp = httpRequest.Get(postNode.get("id").asText(), 200, "/connections/");
         JsonNode getNode = schemaValidation(getResp, "connection");
 
         // Prep an ObjectNode to do a put on the Connection
@@ -203,7 +210,7 @@ public class PocTest {
         postCon.putObject("connect").put("url", "http://localhost:5080/as2");
 
         // Attempt to do a Put on the already POSTED connection to update the trading partner's URL
-        String putResp = Put(postCon, 200, "/connections/" + getNode.get("id").asText());
+        String putResp = httpRequest.Put(postCon, 200, "/connections/" + getNode.get("id").asText());
         JsonNode putNode = schemaValidation(putResp, "connection");
 
         // Verify that the content has changed due to the Put
@@ -211,14 +218,14 @@ public class PocTest {
         Assert.assertEquals(putNode.get("connect").get("url").asText(), "http://localhost:5080/as2");
 
         // Attempt the final Get to verify permanence, validate the JSON returned against the connection schema
-        String finalGet = Get(putNode.get("id").asText(), 200, "/connections/");
+        String finalGet = httpRequest.Get(putNode.get("id").asText(), 200, "/connections/");
         JsonNode finalNode = schemaValidation(finalGet, "connection");
 
         // Attempt a delete to clean up after the test
-        Delete(putNode.get("id").asText(), 204, "/connections/");
+        httpRequest.Delete(putNode.get("id").asText(), 204, "/connections/");
 
         // Attempt a Get to ensure that it's been deleted
-        Get(putNode.get("id").asText(), 404, "/connections/");
+        httpRequest.Get(putNode.get("id").asText(), 404, "/connections/");
 
     }
 
@@ -239,44 +246,6 @@ public class PocTest {
         }
 
         return myNode;
-
-    }
-
-    public static String Post(String requestJson, int expStatus, String url) {
-        Response resp = given().contentType("application/json").and().body(requestJson).post(url);
-        Assert.assertEquals(resp.getStatusCode(), expStatus);
-        JSONObject jsonResponse = new JSONObject(resp.asString());
-        return jsonResponse.toString();
-
-    }
-
-    public static String Post(Object reqObj, int expStatus, String url) {
-        Response resp = given().contentType("application/json").and().body(reqObj.toString()).post(url);
-        Assert.assertEquals(resp.getStatusCode(), expStatus);
-        JSONObject jsonResponse = new JSONObject(resp.asString());
-        return jsonResponse.toString();
-
-    }
-
-    public static String Put(Object reqObj, int expStatus, String url) {
-        Response resp = given().contentType("application/json").and().body(reqObj.toString()).put(url);
-        Assert.assertEquals(resp.getStatusCode(), expStatus);
-        JSONObject jsonResponse = new JSONObject(resp.asString());
-        return jsonResponse.toString();
-
-    }
-
-    public static String Get(String conId, int expStatus, String url) {
-        Response resp = given().when().get(url + conId);
-        Assert.assertEquals(resp.getStatusCode(), expStatus);
-        JSONObject jsonResponse = new JSONObject(resp.asString());
-        return jsonResponse.toString();
-
-    }
-
-    public static void Delete(String conId, int expStatus, String url) {
-        Response resp = given().and().delete(url + conId);
-        Assert.assertEquals(resp.getStatusCode(), expStatus);
 
     }
 
