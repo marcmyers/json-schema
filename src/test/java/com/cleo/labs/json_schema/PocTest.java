@@ -19,8 +19,6 @@ import org.json.JSONObject;
 import org.skife.url.UrlSchemeRegistry;
 import org.testng.Assert;
 
-import com.jayway.restassured.response.Response;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -36,52 +34,8 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 public class PocTest {
-    static JsonSchemaFactory schema_factory;
-    static JsonSchema        connection_schema;
-    static JsonSchema        certificate_schema;
-
     static HttpRequest httpRequest = new HttpRequest();
-
-    static {
-        UrlSchemeRegistry.register("resource", ResourceHandler.class);
-
-    }
-
-    private static final URI schema_uri = uriOrElse("http://cleo.com/schemas/");
-    private static final URI schema_dir = uriOrElse("resource:/com/cleo/versalex/json/schemas/");
-
-    private static URI uriOrElse(String u) {
-        try {
-            return new URI(u);
-
-        } catch (URISyntaxException ignore) {}
-        return null;
-
-    }
-
-    @BeforeClass
-    public static void setup() throws Exception {
-        schema_factory = JsonSchemaFactory.byDefault().thaw()
-                         .setLoadingConfiguration(
-                             LoadingConfiguration.byDefault().thaw()
-                             .setURITranslatorConfiguration(
-                                 URITranslatorConfiguration.newBuilder()
-                                 .setNamespace(schema_uri)
-                                 .addPathRedirect(schema_uri, schema_dir)
-                                 .freeze())
-                             .freeze())
-                         .freeze();
-
-
-        connection_schema = schema("connection.schema");
-        certificate_schema = schema("cert.schema");
-
-    }
-
-    public static org.hamcrest.Matcher<?> matchesSchema(String schema) {
-        return matchesJsonSchema(uriOrElse(schema_uri.toString()+schema)).using(schema_factory);
-
-    }
+    static SchemaValidation schemaValid = new SchemaValidation();
 
     @BeforeTest
     public static void testSetup() {
@@ -93,23 +47,8 @@ public class PocTest {
 
     }
 
-    static JsonSchema schema(String fn) throws ProcessingException, IOException {
-        // return schema_factory.getJsonSchema(JsonLoader.fromFile(new File(schema_dir, fn)));
-        return schema_factory.getJsonSchema(fn);
-
-    }
-
     private static String getResource(String resource) throws IOException {
         return Resources.toString(Resources.getResource(resource), Charsets.UTF_8);
-
-    }
-
-    static void assertSuccess(ProcessingReport report) throws JsonProcessingException {
-        if (!report.isSuccess()) {
-            System.out.println(report);
-
-        }
-        Assert.assertTrue(report.isSuccess());
 
     }
 
@@ -117,9 +56,7 @@ public class PocTest {
     @Test
     public void mockConTest() throws Exception {
         String content = getResource("as2-connection.json");
-        JsonNode node = new ObjectMapper().readTree(content);
-        Assert.assertNotNull(node);
-        assertSuccess(connection_schema.validate(node));
+        JsonNode node = schemaValid.validate(content, "connection");
 
     }
 
@@ -127,9 +64,7 @@ public class PocTest {
     @Test
     public void mockCertTest() throws Exception {
         String content = getResource("as2-certificate.json");
-        JsonNode node = new ObjectMapper().readTree(content);
-        Assert.assertNotNull(node);
-        assertSuccess(certificate_schema.validate(node));
+        JsonNode node = schemaValid.validate(content, "certificate");
 
     }
 
@@ -137,9 +72,9 @@ public class PocTest {
     @Test
     public void liveConPostTest() throws Exception {
         String jsonRequest = getResource("as2-basic-connection.json");
-        // JsonNode node = schemaValidation(Post(jsonRequest, 201, "/connections"), "connection");
-        JsonNode node = schemaValidation(httpRequest.Post(jsonRequest, 201, "/connections"), "connection");
-        JsonNode getNode = schemaValidation(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
+        // JsonNode node = validate(Post(jsonRequest, 201, "/connections"), "connection");
+        JsonNode node = schemaValid.validate(httpRequest.Post(jsonRequest, 201, "/connections"), "connection");
+        JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
         httpRequest.Delete(getNode.get("id").asText(), 204, "/connections/");
 
     }
@@ -149,8 +84,8 @@ public class PocTest {
     @Test(enabled = false)
     public void liveCertTest() throws Exception {
         String jsonRequest = getResource("as2-qa-test-certificate.json");
-        JsonNode node = schemaValidation(httpRequest.Post(jsonRequest, 201, "/certs"), "certificate");
-        JsonNode getNode = schemaValidation(httpRequest.Get(node.get("id").asText(), 200, "/certs/"), "certificate");
+        JsonNode node = schemaValid.validate(httpRequest.Post(jsonRequest, 201, "/certs"), "certificate");
+        JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/certs/"), "certificate");
         httpRequest.Delete(node.get("id").asText(), 204, "/certs/");
 
     }
@@ -175,7 +110,7 @@ public class PocTest {
 
         String postResponse = httpRequest.Post(newCert, 201, "/certs");
 
-        JsonNode node = schemaValidation(postResponse, "certificate");
+        JsonNode node = schemaValid.validate(postResponse, "certificate");
 
         httpRequest.Delete(node.get("id").asText(), 204, "/certs/");
 
@@ -194,7 +129,7 @@ public class PocTest {
         String postResp = httpRequest.Post(newConnection, 201, "/connections");
 
         // Validate the response against the schema
-        JsonNode postNode = schemaValidation(postResp, "connection");
+        JsonNode postNode = schemaValid.validate(postResp, "connection");
 
         // Verify content pertinent to the test, the connection should not be ready
         Assert.assertEquals(postNode.get("ready").asText(), "false");
@@ -202,7 +137,7 @@ public class PocTest {
 
         // Attempt a Get to verify permanence, validate the JSON returned against the connection schema
         String getResp = httpRequest.Get(postNode.get("id").asText(), 200, "/connections/");
-        JsonNode getNode = schemaValidation(getResp, "connection");
+        JsonNode getNode = schemaValid.validate(getResp, "connection");
 
         // Prep an ObjectNode to do a put on the Connection
         ObjectNode postCon = (ObjectNode)getNode;
@@ -211,7 +146,7 @@ public class PocTest {
 
         // Attempt to do a Put on the already POSTED connection to update the trading partner's URL
         String putResp = httpRequest.Put(postCon, 200, "/connections/" + getNode.get("id").asText());
-        JsonNode putNode = schemaValidation(putResp, "connection");
+        JsonNode putNode = schemaValid.validate(putResp, "connection");
 
         // Verify that the content has changed due to the Put
         Assert.assertEquals(putNode.get("ready").asText(), "true");
@@ -219,33 +154,13 @@ public class PocTest {
 
         // Attempt the final Get to verify permanence, validate the JSON returned against the connection schema
         String finalGet = httpRequest.Get(putNode.get("id").asText(), 200, "/connections/");
-        JsonNode finalNode = schemaValidation(finalGet, "connection");
+        JsonNode finalNode = schemaValid.validate(finalGet, "connection");
 
         // Attempt a delete to clean up after the test
         httpRequest.Delete(putNode.get("id").asText(), 204, "/connections/");
 
         // Attempt a Get to ensure that it's been deleted
         httpRequest.Get(putNode.get("id").asText(), 404, "/connections/");
-
-    }
-
-    // Attempt to validate the response against the schema and then return the JsonNode used for validation
-    public static JsonNode schemaValidation(String reqResp, String schemaType) throws IOException, ProcessingException {
-        JsonNode myNode = new ObjectMapper().readTree(reqResp);
-
-        // Verify that the response is not null
-        Assert.assertNotNull(myNode);
-
-        // Verify the response against the requested schema
-        if (schemaType == "connection") {
-            assertSuccess(connection_schema.validate(myNode));
-
-        } else if (schemaType == "certificate") {
-            assertSuccess(certificate_schema.validate(myNode));
-
-        }
-
-        return myNode;
 
     }
 
