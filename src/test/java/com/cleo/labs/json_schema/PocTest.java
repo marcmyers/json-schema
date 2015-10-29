@@ -3,8 +3,12 @@ package com.cleo.labs.json_schema;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.preemptive;
 
+import static com.jayway.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
+
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +19,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.jayway.restassured.RestAssured;
+import org.hamcrest.Matcher;
 import org.json.JSONObject;
+import org.skife.url.UrlSchemeRegistry;
 import org.testng.Assert;
 
 import com.jayway.restassured.response.Response;
@@ -36,30 +42,48 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 public class PocTest {
-    static String            schema_uri;
-    static String            schema_dir;
     static JsonSchemaFactory schema_factory;
     static JsonSchema        connection_schema;
     static JsonSchema        certificate_schema;
 
+    static {
+        UrlSchemeRegistry.register("resource", ResourceHandler.class);
+
+    }
+
+    private static final URI schema_uri = uriOrElse("http://cleo.com/schemas/");
+    private static final URI schema_dir = uriOrElse("resource:/com/cleo/versalex/json/schemas/");
+
+    private static URI uriOrElse(String u) {
+        try {
+            return new URI(u);
+
+        } catch (URISyntaxException ignore) {}
+        return null;
+
+    }
+
     @BeforeClass
     public static void setup() throws Exception {
-        schema_uri = "http://cleo.com/schemas/";
-        schema_dir = new File("../rest-api/schema/").getCanonicalPath();
-        
         schema_factory = JsonSchemaFactory.byDefault().thaw()
                          .setLoadingConfiguration(
                              LoadingConfiguration.byDefault().thaw()
                              .setURITranslatorConfiguration(
                                  URITranslatorConfiguration.newBuilder()
                                  .setNamespace(schema_uri)
-                                 .addPathRedirect(schema_uri, "file:///G:/IdeaProjects/rest-api/schema/")
+                                 .addPathRedirect(schema_uri, schema_dir)
                                  .freeze())
                              .freeze())
                          .freeze();
 
+
         connection_schema = schema("connection.schema");
         certificate_schema = schema("cert.schema");
+
+    }
+
+    public static org.hamcrest.Matcher<?> matchesSchema(String schema) {
+        return matchesJsonSchema(uriOrElse(schema_uri.toString()+schema)).using(schema_factory);
 
     }
 
@@ -73,7 +97,8 @@ public class PocTest {
     }
 
     static JsonSchema schema(String fn) throws ProcessingException, IOException {
-        return schema_factory.getJsonSchema(JsonLoader.fromFile(new File(schema_dir, fn)));
+        // return schema_factory.getJsonSchema(JsonLoader.fromFile(new File(schema_dir, fn)));
+        return schema_factory.getJsonSchema(fn);
 
     }
 
@@ -112,7 +137,7 @@ public class PocTest {
     }
 
     // Generates a new certificate using a request from a json file and then attempts to delete it
-    @Test(enabled=false)
+    @Test
     public void liveCertTest() throws Exception {
         String jsonRequest = getResource("as2-qa-test-certificate.json");
         // Remove later
@@ -128,7 +153,7 @@ public class PocTest {
     }
 
     // Generates a new certificate using a request generated from a POJO and then attempts to delete it
-    @Test(enabled=false)
+    @Test
     public void liveCertTestPOJO() throws Exception {
         PostCert newCert = new PostCert();
 
@@ -177,7 +202,7 @@ public class PocTest {
         String getResp = Get(postNode.get("id").asText(), 200, "/connections/");
         JsonNode getNode = new ObjectMapper().readTree(getResp);
         Assert.assertNotNull(getNode);
-        assertSuccess(connection_schema.validate(getNode));
+        // assertSuccess(connection_schema.validate(getNode));
 
         // Prep the connection for an attempted Put
         Connection postedConnection = new Connection();
@@ -217,6 +242,7 @@ public class PocTest {
 
         // Verify that the response is not null
         Assert.assertNotNull(myNode);
+
 
         // Verify the response against the schema
         if (schemaType == "connection") {
