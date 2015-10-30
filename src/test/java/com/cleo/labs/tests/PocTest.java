@@ -1,4 +1,4 @@
-package com.cleo.labs.json_schema;
+package com.cleo.labs.tests;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.preemptive;
@@ -11,6 +11,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.cleo.labs.json_schema.HttpRequest;
+import com.cleo.labs.json_schema.SchemaValidation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jayway.restassured.RestAssured;
@@ -52,27 +54,10 @@ public class PocTest {
 
     }
 
-    // Mock Test - Validates JSON from a file using the Cleo RestAPI schemas from Nexus
-    @Test
-    public void mockConTest() throws Exception {
-        String content = getResource("as2-connection.json");
-        JsonNode node = schemaValid.validate(content, "connection");
-
-    }
-
-    // Mock Test - Validates JSON from a file using the Cleo RestAPI schemas from Nexus
-    @Test
-    public void mockCertTest() throws Exception {
-        String content = getResource("as2-certificate.json");
-        JsonNode node = schemaValid.validate(content, "certificate");
-
-    }
-
     // POSTS a new connection using a JSON file and validates the schema
     @Test
     public void liveConPostTest() throws Exception {
         String jsonRequest = getResource("as2-basic-connection.json");
-        // JsonNode node = validate(Post(jsonRequest, 201, "/connections"), "connection");
         JsonNode node = schemaValid.validate(httpRequest.Post(jsonRequest, 201, "/connections"), "connection");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
         httpRequest.Delete(getNode.get("id").asText(), 204, "/connections/");

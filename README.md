@@ -115,7 +115,7 @@ static HttpRequest httpRequest = new HttpRequest();
 
 ```
 
-Here's the overloaded Post method:
+Here's the overloaded Post method for example:
 
 ```
 
@@ -137,12 +137,15 @@ Here's the overloaded Post method:
 
 ```
 
-So, if you need to attempt a Post, you're going to need to pass either the Json your requests as string or an Object with your Request (a JSONNode or Object), the expected response as an integer, and the resource endpoint such as "/connections"
+So, if you need to attempt a Post, you're going to need to pass either the Json your requesting as string or an Object with your Request (a JSONNode or JSONObject), the expected response as an integer, and the resource endpoint such as "/connections".
+
 The methods were overloaded to make it flexible based on what state your Json Request was in and so that we could send raw Json from a Json or a JSONNode or Object based on what the test requried.
 The method will return the jsonResponse as a String after attempting to assert the status code that was returned against what expStatus argument was passed in.
 
-Here's an example of an attempted Post. Keep in mind Posts are sort of generic, you determine what you're posting when you pass in the resource endpoint as String url ("/connections", "/certs", etc.)
+Keep in mind Posts are sort of generic, you determine what you're posting when you pass in the resource endpoint as String url ("/connections", "/certs", etc.).
 RestAssured will resolve the full url and credentials automatically based on what you set in the @BeforeTest method so it's not necessary to refer to them here, though you can override it in your own method if need be.
+
+Here's an example of an attempted Post:
 
 ```
 
@@ -155,7 +158,7 @@ RestAssured will resolve the full url and credentials automatically based on wha
 ```
 
 In this example we're simply asking for a new as2 connection, we expect a 201 to be returned, and we're making this request to the /connections endpoint.
-The method should return the resposne as a string and populate our postResp String variable.
+The method should return the response as a string and populate our postResp String variable.
 
 ### Schema Validation ###
 
@@ -197,10 +200,8 @@ The correct schema is retrieved based on a Hash map of the schemaType requested 
                     .put("action", schema("action.schema"))
                     .put("collection", schema("collection.schema"))
                     .put("common",schema("common.schema"))
-                    .put("connectionFile",schema("connectionFile.schema"))
                     .put("event", schema("event.schema"))
                     .put("job", schema("job.schema"))
-                    .put("resourcefolder", schema("resourcefolder.schema"))
                     .put("transfer", schema("transfer.schema"))
                     .build()
 
