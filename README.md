@@ -1,6 +1,6 @@
 ## Sample code for json-schema ##
 
-This project contains a set of JUnit4 test cases that illustrate the use of `json`, `json-schema`, and `yaml` using jackson and `json-schema-validator` from [Francis Galiegue's GitHub site](https://github.com/fge/json-schema-validator).
+This project contains a set of TestNG test cases that illustrate the use of `json`, and `json-schema` using jackson and `json-schema-validator` from [Francis Galiegue's GitHub site](https://github.com/fge/json-schema-validator).
 
 The validations are performed against the Cleo REST-API schemas.  These schemas are not (yet) publically hosted, so the test cases assume that you have checked out the `rest-api` project from [Cleo's GitHub site](https://github.com/CleoDev/rest-api) as a sibling to this project.  In particular, the schema files are expected to be found in `../rest-api/schema/` from the root of this project.
 
@@ -10,7 +10,6 @@ The code illustrates:
 
 * loading and processing JSON schemas from schema files, including handling references between files using `$ref` by defining and using a `JsonSchemaFactory`.
 * loading a JSON file into a [Jackson Databind](https://github.com/FasterXML/jackson-databind) `JSONNode` (from JAR resources, but similar code would be used to load from external files).
-* loading a YAML file into a `JSONNode`.
 * validating a `JSONNode` against a `JsonSchema`.
 
 ### Loading files from JAR resources using Guava ###
@@ -33,15 +32,6 @@ JSON parsing is handled by Jackson's `ObjectMapper`, which directly provides the
 
 ```
 JsonNode node = new ObjectMapper().readTree(content);
-```
-
-### Reading YAML into a `JSONNode` ###
-
-Reading YAML through Jackson is nearly as simple.  Having first created a `YAMLFactory`, use the factory to create a `JsonParser` instance over the YAML String content.  This then feeds into the [`readTree(JsonParser)`](http://fasterxml.github.io/jackson-databind/javadoc/2.5/com/fasterxml/jackson/databind/ObjectMapper.html#readTree(com.fasterxml.jackson.core.JsonParser)) method for parsing.
-
-```
-yaml_factory = new YAMLFactory();
-JsonNode node = new ObjectMapper().readTree(yaml_factory.createParser(content));
 ```
 
 ### Loading and validating JSON Schemas ###

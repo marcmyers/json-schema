@@ -1,0 +1,27 @@
+{
+  "id":                   "49905AE0A21845E0B84846F42B8FAF0FD463695E",
+  "alias":                "test",
+  "trusted":              true,
+  "status":               "valid",
+  "signatureAlgorithm":   "sha1WithRSAEncryption",
+  "version":              "v3",
+  "serialNumber":         "123456789ABCDEF0",
+  "issuer":               "CN=test,C=US",
+  "notBefore":            "2015-01-18T12:34:56Z",
+  "notAfter":             "2017-01-18T12:34:55Z",
+  "subject":              "CN=test,C=US",
+  "publicKeyAlgorithm":   "rsa",
+  "keyUsage":             ["digitalSignature"],
+  "hasPrivateKey":        true,
+  "certificate":          "MIIDAjCCAmsCEB9CKF88iA+++",
+  "meta": {
+    "resourceType": "cert"
+  },
+  "_links": {
+    "self":               { "href": "/api/certs/49905AE0A21845E0B84846F42B8FAF0FD463695E" },
+    "usage": [
+      { "href": "/api/connections/49905AE0A21845E0B84846F42B8FAF0FEAF695E",
+        "property": ["localEncryptionCert","localSigningCert"] }
+    ]
+  }
+}
