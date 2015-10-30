@@ -36,25 +36,40 @@ JsonNode node = new ObjectMapper().readTree(content);
 
 ### Loading and validating JSON Schemas ###
 
-The only real complexity in dealing with the schemas is setting up the infrastructure for resolving `$ref` references between the schema files.  The reference resolution depends on mapping the schema `id` to a URI for accessing the schema.  In this code we modify the configuration of the `JsonSchemaFactory` to:
+To run the tests you'll need to have access to Cleo's nexus repository since the tests pull the schemas down based on the version of SecureShare_WebServices that's referred to in the pom.xml
 
 * default the uri namespace to `http://cleo.com/schemas/` (it doesn't really matter where, but it gives us a hook to...)
-* map references within the default namespace to the `file:` path where we expect to find the files.
 
 ```
-schema_uri = "http://cleo.com/schemas/";
-schema_dir = new File("../rest-api/schema/").getCanonicalPath();
-        
-schema_factory = JsonSchemaFactory.byDefault().thaw()
-                 .setLoadingConfiguration(
-                     LoadingConfiguration.byDefault().thaw()
-                     .setURITranslatorConfiguration(
-                         URITranslatorConfiguration.newBuilder()
-                         .setNamespace(schema_uri)
-                         .addPathRedirect(schema_uri, "file:"+schema_dir+"/")
-                         .freeze())
-                     .freeze())
-                 .freeze();
+    private static final URI SCHEMA_URI = uriOrElse("http://cleo.com/schemas/");
+    private static final URI SCHEMA_DIR = uriOrElse("resource:/com/cleo/versalex/json/schemas/");
+
+    static {
+        UrlSchemeRegistry.register("resource", ResourceHandler.class);
+
+    }
+
+    private static JsonSchemaFactory instance;
+
+    private JsonSchemaFactorySingleton() {}
+
+    public static JsonSchemaFactory getInstance() {
+        if(instance == null) {
+            instance = JsonSchemaFactory.byDefault().thaw()
+                    .setLoadingConfiguration(
+                            LoadingConfiguration.byDefault().thaw()
+                                    .setURITranslatorConfiguration(
+                                            URITranslatorConfiguration.newBuilder()
+                                                    .setNamespace(SCHEMA_URI)
+                                                    .addPathRedirect(SCHEMA_URI, SCHEMA_DIR)
+                                                    .freeze())
+                                    .freeze())
+                    .freeze();
+
+        }
+
+        return instance;
+    }
 ```
 
 This `schema_factory` can now be used to load schemas from the same `schema_dir` directory with proper resolution of `$ref`.  A JSON schema is of course itself a JSON document, so the technique involves loading the file into a `JSONNode` which can then be passed through `schema_factory.getJsonSchema(JsonNode)` to return a `JsonSchema`, which finally exposes a `validate(JsonNode)` method.
@@ -65,3 +80,138 @@ assertTrue(schema.validate(node));
 ```
 
 This example shows the use of the `JsonLoader` convenience wrapper, included with the `json-schema-validator`, for loading a `File` into a `JSONNode` instead of `ObjectMapper.readTree`.  Note that the source code for [`JsonLoader`](https://github.com/fge/jackson-coreutils/blob/master/src/main/java/com/github/fge/jackson/JsonLoader.java) is a good example of several Guava idoms.
+
+## Test Creation/Usage ##
+
+This section details the day to day usage of the test project.
+
+### @BeforeTest ###
+
+This is a JUnit/TestNG annotation so that certain actions are performed before each test run. 
+In our case, it's used to Setup the default URL, API base path, and Preemptive Credentials to use throughout the test run.
+
+```
+
+    @BeforeTest
+    public static void testSetup() {
+        RestAssured.baseURI = "http://162.243.186.156:5080";
+        RestAssured.basePath = "/api/";
+        RestAssured.authentication = preemptive().basic("administrator", "Admin");
+
+    }
+
+```
+
+This way those values will only have to be set in one place before the test run. Eventually these values can/should come from a csv, data provider, maven test profile, and/or test.xml
+From this point on, to make a request you'll only need to provide the resource of the particular endpoint your trying to reach such as /connections or /certs. Further examples in the Http Requests section below.
+
+### Http Requests ###
+
+To make Http Requests such as Put, Post, etc there is a utility class called HttpRequest.
+
+```
+
+static HttpRequest httpRequest = new HttpRequest();
+
+```
+
+Here's the overloaded Post method:
+
+```
+
+    public static String Post(String requestJson, int expStatus, String url) {
+        Response resp = given().contentType("application/json").and().body(requestJson).post(url);
+        Assert.assertEquals(resp.getStatusCode(), expStatus);
+        JSONObject jsonResponse = new JSONObject(resp.asString());
+        return jsonResponse.toString();
+
+    }
+
+    public static String Post(Object reqObj, int expStatus, String url) {
+        Response resp = given().contentType("application/json").and().body(reqObj.toString()).post(url);
+        Assert.assertEquals(resp.getStatusCode(), expStatus);
+        JSONObject jsonResponse = new JSONObject(resp.asString());
+        return jsonResponse.toString();
+
+    }
+
+```
+
+So, if you need to attempt a Post, you're going to need to pass either the Json your requests as string or an Object with your Request (a JSONNode or Object), the expected response as an integer, and the resource endpoint such as "/connections"
+The methods were overloaded to make it flexible based on what state your Json Request was in and so that we could send raw Json from a Json or a JSONNode or Object based on what the test requried.
+The method will return the jsonResponse as a String after attempting to assert the status code that was returned against what expStatus argument was passed in.
+
+Here's an example of an attempted Post. Keep in mind Posts are sort of generic, you determine what you're posting when you pass in the resource endpoint as String url ("/connections", "/certs", etc.)
+RestAssured will resolve the full url and credentials automatically based on what you set in the @BeforeTest method so it's not necessary to refer to them here, though you can override it in your own method if need be.
+
+```
+
+        JSONObject newConnection = new JSONObject();
+        newConnection.put("type", "as2");
+
+        // Attempt a POST to generate a new connection
+        String postResp = httpRequest.Post(newConnection, 201, "/connections");
+
+```
+
+In this example we're simply asking for a new as2 connection, we expect a 201 to be returned, and we're making this request to the /connections endpoint.
+The method should return the resposne as a string and populate our postResp String variable.
+
+### Schema Validation ###
+
+Handled by the SchemaValidation utility class which relies on the JsonSchemaFactorySingelton.
+
+```
+
+static SchemaValidation schemaValid = new SchemaValidation();
+
+```
+
+When you want to validate a JSON response, use SchemaValidation.validate(String reqResp, String schemaType);
+String reqResp is the JSON response as String and the String schemaType is the schema you want to validate your JSON against.
+This method also returns the JsonNode node it used for validation because most often you'll want to validate specific values in the response as part of further testing.
+
+```
+
+    public JsonNode validate(String reqResp, String schemaType) throws IOException, ProcessingException {
+        JsonNode myNode = new ObjectMapper().readTree(reqResp);
+
+        // Verify that the response is not null
+        Assert.assertNotNull(myNode);
+
+        assertSuccess(schemas.get(schemaType).validate(myNode));
+
+        return myNode;
+
+    }
+
+```
+
+The correct schema is retrieved based on a Hash map of the schemaType requested and the .schema files from Nexus.
+
+```
+
+    private static HashMap<String, JsonSchema> schemas = Maps.newHashMap(new ImmutableMap.Builder<String, JsonSchema>()
+                    .put("connection", schema("connection.schema") )
+                    .put("certificate", schema("cert.schema"))
+                    .put("action", schema("action.schema"))
+                    .put("collection", schema("collection.schema"))
+                    .put("common",schema("common.schema"))
+                    .put("connectionFile",schema("connectionFile.schema"))
+                    .put("event", schema("event.schema"))
+                    .put("job", schema("job.schema"))
+                    .put("resourcefolder", schema("resourcefolder.schema"))
+                    .put("transfer", schema("transfer.schema"))
+                    .build()
+
+    );
+
+```
+
+So, if you needed to validate a connection response, your code would look similar to this:
+
+```
+
+JsonNode postNode = schemaValid.validate(postResp, "connection");
+
+```

@@ -29,6 +29,14 @@ public class SchemaValidation {
     private static HashMap<String, JsonSchema> schemas = Maps.newHashMap(new ImmutableMap.Builder<String, JsonSchema>()
                     .put("connection", schema("connection.schema") )
                     .put("certificate", schema("cert.schema"))
+                    .put("action", schema("action.schema"))
+                    .put("collection", schema("collection.schema"))
+                    .put("common",schema("common.schema"))
+                    .put("connectionFile",schema("connectionFile.schema"))
+                    .put("event", schema("event.schema"))
+                    .put("job", schema("job.schema"))
+                    .put("resourcefolder", schema("resourcefolder.schema"))
+                    .put("transfer", schema("transfer.schema"))
                     .build()
 
     );
