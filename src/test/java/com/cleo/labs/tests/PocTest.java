@@ -1,39 +1,23 @@
 package com.cleo.labs.tests;
 
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.preemptive;
-
-import static com.jayway.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.cleo.labs.json_schema.HttpRequest;
 import com.cleo.labs.json_schema.SchemaValidation;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.jayway.restassured.RestAssured;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
-import org.skife.url.UrlSchemeRegistry;
 import org.testng.Assert;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
-import com.github.fge.jsonschema.core.load.uri.URITranslatorConfiguration;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.jayway.restassured.RestAssured.preemptive;
 
 public class PocTest {
     static HttpRequest httpRequest = new HttpRequest();
