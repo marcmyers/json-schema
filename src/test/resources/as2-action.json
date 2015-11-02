@@ -1,0 +1,23 @@
+{
+  "id":                        "AJASDKFLSS72181AJZ8RK38AAKLQ7ALQAUWO7WUW8A",
+  "alias":                     "send",
+  "active":                    true,
+  "editable":                  true,
+  "runnable":                  true,
+  "ready":                     true,
+  "enabled":                   true,
+  "commands": [
+    "PUT *"
+  ],
+  "schedule":                  "on file continuously",
+  "connection":                { "href": "/api/connections/49905AE0A21845E0B84846F42B8FAF0FEAF695E" },
+  "meta": {
+    "resourceType": "action",
+    "created":      "2014-03-18T00:19:27Z",
+    "lastModified": "2014-03-18T00:19:27Z",
+    "version":      "456"
+  },
+  "_links": {
+    "self":                    { "href": "/api/actions/AJASDKFLSS72181AJZ8RK38AAKLQ7ALQAUWO7WUW8A" }
+  }
+}

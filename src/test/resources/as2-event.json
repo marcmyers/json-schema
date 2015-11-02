@@ -1,0 +1,22 @@
+{
+  "id": "jf9HRlGcRgOWZRSkkSwh-Q",
+  "serial": "HM5207",
+  "threadId": "ka8tvIwoTrK3DgYbp5PZsA",
+  "message": {
+    "text": "2015-10-30T21:15:18Z Job: alias=\"<send>qa_looptest@qa_looptest\" runtype=\"api\" connectionId=\"LUbBZsP7RAOX5FQepINAZA\" actionId=\"kaHPQlZAR_yIKoqGXXrw8A\""
+  },
+  "attributes": {
+    "type": "job",
+    "alias": "<send>qa_looptest@qa_looptest"
+  },
+  "meta": {
+    "resourceType": "event",
+    "created": "2015-10-30T21:15:18Z",
+    "sequence": 5
+  },
+  "_links": {
+    "self": {
+      "href": "/api/events/jf9HRlGcRgOWZRSkkSwh-Q"
+    }
+  }
+}

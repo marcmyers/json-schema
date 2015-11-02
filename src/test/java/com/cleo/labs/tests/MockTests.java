@@ -21,7 +21,6 @@ public class MockTests {
 
     }
 
-    // Mock Test - Validates JSON from a file using the Cleo RestAPI schemas from Nexus
     @Test
     public void mockConTest() throws Exception {
         String content = getResource("as2-connection.json");
@@ -29,11 +28,31 @@ public class MockTests {
 
     }
 
-    // Mock Test - Validates JSON from a file using the Cleo RestAPI schemas from Nexus
     @Test
     public void mockCertTest() throws Exception {
         String content = getResource("as2-certificate.json");
         JsonNode node = schemaValid.validate(content, "certificate");
+
+    }
+
+    @Test
+    public void mockActionTest() throws Exception {
+        String content = getResource("as2-action.json");
+        JsonNode node = schemaValid.validate(content, "action");
+
+    }
+
+    @Test
+    public void mockTransferTest() throws Exception {
+        String content = getResource("as2-transfer.json");
+        JsonNode node = schemaValid.validate(content, "transfer");
+
+    }
+
+    @Test
+    public void mockEventTest() throws Exception {
+        String content = getResource("as2-event.json");
+        JsonNode node = schemaValid.validate(content, "event");
 
     }
 

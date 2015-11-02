@@ -1,0 +1,42 @@
+{
+  "id": "885AipGYlR0-EGv06z52zjOnPwM",
+  "serial": "HM5207",
+  "status": "success",
+  "direction": "outgoing",
+  "transport": "as2",
+  "messageId": "CLEO-20151030_211518849-41Q96V@restlooptest2_restlooptest2.hostname.domain.com-J",
+  "fileCount": 1,
+  "seconds": 0.05,
+  "bytes": 1533,
+  "runtype": "api",
+  "meta": {
+    "resourceType": "transfer",
+    "created": "2015-10-30T21:15:18Z",
+    "lastModified": "2015-10-30T21:15:19Z"
+  },
+  "_links": {
+    "self": {
+      "href": "/api/transfers/885AipGYlR0-EGv06z52zjOnPwM"
+    },
+    "connection": {
+      "href": "/api/connections/LUbBZsP7RAOX5FQepINAZA"
+    },
+    "action": {
+      "href": "/api/actions/kaHPQlZAR_yIKoqGXXrw8A"
+    },
+    "resend": {
+      "href": "/api/transfers/885AipGYlR0-EGv06z52zjOnPwM/resend"
+    },
+    "events": {
+      "href": "/api/transfers/885AipGYlR0-EGv06z52zjOnPwM/events"
+    },
+    "files": [
+      {
+        "href": "/api/events/_Y7RwmJOR2iECeXMz3dA8g",
+        "source": "outbox/test/test.edi",
+        "filesize": 1533,
+        "fileTimeStamp": "2015-10-16T15:57:20Z"
+      }
+    ]
+  }
+}
