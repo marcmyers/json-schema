@@ -2,46 +2,33 @@ package com.cleo.labs.tests;
 
 import com.cleo.labs.json_schema.HttpRequest;
 import com.cleo.labs.json_schema.SchemaValidation;
+import com.cleo.labs.json_schema.Utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-import com.jayway.restassured.RestAssured;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.jayway.restassured.RestAssured.preemptive;
 
 public class PocTest {
     static HttpRequest httpRequest = new HttpRequest();
     static SchemaValidation schemaValid = new SchemaValidation();
+    static Utils util = new Utils();
 
     @BeforeTest
-    public static void testSetup() {
-        // Setup the default URL, API base path, and Preemptive Credentials to use throughout the test
-        // Later these can be set from a data provider, test xml file, and/or maven test profile
-        RestAssured.baseURI = "http://162.243.186.156:5080";
-        RestAssured.basePath = "/api/";
-        RestAssured.authentication = preemptive().basic("administrator", "Admin");
-
-    }
-
-    private static String getResource(String resource) throws IOException {
-        return Resources.toString(Resources.getResource(resource), Charsets.UTF_8);
+    public static void beforeTest() {
+        util.testSetup("http://162.243.186.156:5080", "/api/", "administrator", "Admin");
 
     }
 
     // POSTS a new connection using a JSON file and validates the schema
     @Test
     public void liveConPostTest() throws Exception {
-        String jsonRequest = getResource("as2-basic-connection.json");
+        String jsonRequest = util.getResource("as2-basic-connection.json");
         JsonNode node = schemaValid.validate(httpRequest.Post(jsonRequest, 201, "/connections"), "connection");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
         httpRequest.Delete(getNode.get("id").asText(), 204, "/connections/");
@@ -52,7 +39,7 @@ public class PocTest {
     // Disabled until schema validation succeeds
     @Test(enabled = false)
     public void liveCertTest() throws Exception {
-        String jsonRequest = getResource("as2-qa-test-certificate.json");
+        String jsonRequest = util.getResource("as2-qa-test-certificate.json");
         JsonNode node = schemaValid.validate(httpRequest.Post(jsonRequest, 201, "/certs"), "certificate");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/certs/"), "certificate");
         httpRequest.Delete(node.get("id").asText(), 204, "/certs/");
