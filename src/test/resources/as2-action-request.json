@@ -1,0 +1,7 @@
+{
+  "alias":"qa_test_action",
+  "enabled":true,
+  "commands": [
+    "PUT test/*"
+  ]
+}

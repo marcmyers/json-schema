@@ -9,6 +9,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -20,8 +21,9 @@ public class PocTest {
     static Utils util = new Utils();
 
     @BeforeTest
-    public static void beforeTest() {
-        util.testSetup("http://162.243.186.156:5080", "/api/", "administrator", "Admin");
+    @Parameters({"url"})
+    public static void beforeTest(String url) {
+        util.testSetup(url, "/api/", "administrator", "Admin");
 
     }
 
