@@ -5,9 +5,7 @@ import com.cleo.labs.json_schema.SchemaValidation;
 import com.cleo.labs.json_schema.Utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.json.JSONObject;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -78,6 +76,7 @@ public class SmokeTests {
         JsonNode node = schemaValid.validate(postResp, "connection");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
 
+        // Prep an action with the self url of the connection
         JsonNode actionNode = new ObjectMapper().readTree(util.getResource("as2-action-request.json"));
         ObjectNode actionRequest = (ObjectNode)actionNode;
         actionRequest.set("connection", getNode.get("_links").get("self"));

@@ -1,11 +1,11 @@
 package com.cleo.labs.json_schema;
 
+import com.google.common.io.Resources;
+
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-
-import com.google.common.io.Resources;
 
 public class ResourceHandler extends URLStreamHandler {
 
