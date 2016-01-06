@@ -26,6 +26,14 @@ public class HttpRequest {
 
     }
 
+    public static String Put(String requestJson, int expStatus, String url) {
+        Response resp = given().contentType("application/json").and().body(requestJson).put(url);
+        Assert.assertEquals(resp.getStatusCode(), expStatus);
+        JSONObject jsonResponse = new JSONObject(resp.asString());
+        return jsonResponse.toString();
+
+    }
+
     public static String Put(Object reqObj, int expStatus, String url) {
         Response resp = given().contentType("application/json").and().body(reqObj.toString()).put(url);
         Assert.assertEquals(resp.getStatusCode(), expStatus);

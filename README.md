@@ -94,9 +94,21 @@ In our case, it's used to Setup the default URL, API base path, and Preemptive C
 
     @BeforeTest
     public static void testSetup() {
-        RestAssured.baseURI = "http://162.243.186.156:5080";
-        RestAssured.basePath = "/api/";
-        RestAssured.authentication = preemptive().basic("administrator", "Admin");
+        util.testSetup("http://localhost:5082", "/api/", "administrator", "Admin");
+
+    }
+
+```
+
+Here's the testSetup method that we're calling in @BeforeTest
+
+```
+
+    public static void testSetup(String baseURI, String basePath, String userName, String userPass) {
+        // Setup the default URL, API base path, and Preemptive Credentials to use throughout the test
+        RestAssured.baseURI = baseURI;
+        RestAssured.basePath = basePath;
+        RestAssured.authentication = preemptive().basic(userName, userPass);
 
     }
 
@@ -139,7 +151,7 @@ Here's the overloaded Post method for example:
 
 So, if you need to attempt a Post, you're going to need to pass either the Json your requesting as string or an Object with your Request (a JSONNode or JSONObject), the expected response as an integer, and the resource endpoint such as "/connections".
 
-The methods were overloaded to make it flexible based on what state your Json Request was in and so that we could send raw Json from a Json or a JSONNode or Object based on what the test requried.
+The methods were overloaded to make it flexible based on what state your Json Request was in and so that we could send raw Json from a JSONNode or Object based on what the test required.
 The method will return the jsonResponse as a String after attempting to assert the status code that was returned against what expStatus argument was passed in.
 
 Keep in mind Posts are sort of generic, you determine what you're posting when you pass in the resource endpoint as String url ("/connections", "/certs", etc.).

@@ -30,13 +30,25 @@ public class SmokeTests {
 
     @BeforeTest
     public static void beforeTest() {
-        util.testSetup("http://162.243.186.156:5080", "/api/", "administrator", "Admin");
+        util.testSetup("http://localhost:5082", "/api/", "administrator", "Admin");
 
     }
 
     @Test()
-    public void connectSmoke() throws Exception{
+    public void as2ConSmoke() throws Exception{
         String jsonRequest = util.getResource("as2-basic-connection.json");
+        String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
+        jsonNodes.add(new ObjectMapper().readTree(postResp));
+        JsonNode node = schemaValid.validate(postResp, "connection");
+        JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
+        httpRequest.Delete(getNode.get("id").asText(), 204, "/connections/");
+
+    }
+
+    @Test()
+    public void ftpConSmoke() throws Exception{
+        String jsonRequest = util.getResource("ftp-basic-connection.json");
+        System.out.println(jsonRequest);
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
         JsonNode node = schemaValid.validate(postResp, "connection");
@@ -68,7 +80,7 @@ public class SmokeTests {
     }
 
     // You need to be able to POST a new connection to POST an action, so this will not run if the connection smoke test has failed
-    @Test(dependsOnMethods = {"connectSmoke"})
+    @Test(dependsOnMethods = {"as2ConSmoke"})
     public void actionSmoke() throws Exception{
         String jsonRequest = util.getResource("as2-basic-connection.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");

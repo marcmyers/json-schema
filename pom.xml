@@ -61,7 +61,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jackson.version>2.6.0</jackson.version>
-        <cleo.version>5.2.1.0</cleo.version>
+        <cleo.version>5.3-SNAPSHOT</cleo.version>
     </properties>
 
     <dependencies>
