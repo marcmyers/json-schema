@@ -38,6 +38,36 @@ JsonNode node = new ObjectMapper().readTree(content);
 
 To run the tests you'll need to have access to Cleo's nexus repository since the tests pull the schemas down based on the version of SecureShare_WebServices that's referred to in the pom.xml
 
+If you need to test against a different version of the schemas, you'll need to go into the pom.xml file of the project and change the cleo version value here:
+
+```
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jackson.version>2.6.0</jackson.version>
+        <cleo.version>5.3-SNAPSHOT</cleo.version>
+    </properties>
+
+```
+
+Which in turn sets the value here:
+
+```
+
+        <dependency>
+            <groupId>com.cleo</groupId>
+            <artifactId>SecureShare_WebServices</artifactId>
+            <version>${cleo.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+```
+
 * default the uri namespace to `http://cleo.com/schemas/` (it doesn't really matter where, but it gives us a hook to...)
 
 ```
@@ -227,4 +257,25 @@ So, if you needed to validate a connection response, your code would look simila
 
 JsonNode postNode = schemaValid.validate(postResp, "connection");
 
+```
+
+## Running the Tests ##
+
+This project is fully mavenized. By default if you run the following command at the root of the project:
+
+```
+mvn test
+```
+
+It will run the SmokeTests.xml against http://localhost:5082 and expects certain users to have access to rest for the tests to succeed. (at this time, the default administrator account)
+To run the test against a different url and/or port, use the following command specifying the url you want to test against:
+
+```
+mvn test -DserverURL=http://192.168.0.1:5080
+```
+
+If you want to run a different suite file, use the following command specifying the xml you want to test against:
+
+```
+mvn test -DsuiteXML=RegressionTest.xml
 ```

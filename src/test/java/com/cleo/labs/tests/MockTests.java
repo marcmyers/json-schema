@@ -14,8 +14,15 @@ public class MockTests {
     static Utils util = new Utils();
 
     @Test
-    public void mockConTest() throws Exception {
+    public void mockAs2ConTest() throws Exception {
         String content = util.getResource("as2-connection.json");
+        JsonNode node = schemaValid.validate(content, "connection");
+
+    }
+
+    @Test
+    public void mockFtpConTest() throws Exception {
+        String content = util.getResource("ftp-connection.json");
         JsonNode node = schemaValid.validate(content, "connection");
 
     }

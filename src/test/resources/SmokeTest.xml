@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<suite name="SmokeTest" parallel="classes" thread-count="1">
+    <test name="MockTests">
+        <classes>
+            <class name="com.cleo.labs.tests.MockTests"></class>
+        </classes>
+    </test>
+    <test name="SmokeTests">
+        <echo>serverURL:${serverURL}</echo>
+        <echo>endpoint:${endpoint}</echo>
+        <classes>
+            <class name="com.cleo.labs.tests.SmokeTests"></class>
+        </classes>
+    </test>
+</suite>

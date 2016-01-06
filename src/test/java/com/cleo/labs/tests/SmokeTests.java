@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -29,8 +30,9 @@ public class SmokeTests {
     private static List<JsonNode> jsonNodes = new ArrayList<>();
 
     @BeforeTest
-    public static void beforeTest() {
-        util.testSetup("http://localhost:5082", "/api/", "administrator", "Admin");
+    @Parameters({"serverURL", "endpoint"})
+    public static void beforeTest(String serverURL, String endpoint) {
+        util.testSetup(serverURL, endpoint, "administrator", "Admin");
 
     }
 

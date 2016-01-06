@@ -15,6 +15,10 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * These tests and methods are not intended for use in Jenkins or any other automated build platform.
+ * Their main purpose was to attempt to explore alternative methods of testing Rest w/out POJOs or complex utility methods
+ */
 public class PocTest {
     static HttpRequest httpRequest = new HttpRequest();
     static SchemaValidation schemaValid = new SchemaValidation();
