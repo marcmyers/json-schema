@@ -59,7 +59,7 @@ public class SmokeTests {
 
     @Test()
     public void genCertSmoke() throws Exception{
-        String jsonRequest = util.getResource("as2-qa-test-certificate.json");
+        String jsonRequest = util.getResource("qa-test-certificate.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/certs");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
         JsonNode node = schemaValid.validate(postResp, "certificate");
@@ -70,7 +70,7 @@ public class SmokeTests {
 
     @Test()
     public void importCertSmoke() throws Exception{
-        String jsonRequest = util.getResource("as2-import-certificate.json");
+        String jsonRequest = util.getResource("import-certificate.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/certs");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
         JsonNode node = schemaValid.validate(postResp, "certificate");
@@ -89,7 +89,7 @@ public class SmokeTests {
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
 
         // Prep an action with the self url of the connection
-        JsonNode actionNode = new ObjectMapper().readTree(util.getResource("as2-action-request.json"));
+        JsonNode actionNode = new ObjectMapper().readTree(util.getResource("action-request.json"));
         ObjectNode actionRequest = (ObjectNode)actionNode;
         actionRequest.set("connection", getNode.get("_links").get("self"));
 

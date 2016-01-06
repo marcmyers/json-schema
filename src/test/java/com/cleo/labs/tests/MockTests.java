@@ -22,14 +22,14 @@ public class MockTests {
 
     @Test
     public void mockCertTest() throws Exception {
-        String content = util.getResource("as2-certificate.json");
+        String content = util.getResource("certificate.json");
         JsonNode node = schemaValid.validate(content, "certificate");
 
     }
 
     @Test
     public void mockActionTest() throws Exception {
-        String content = util.getResource("as2-action.json");
+        String content = util.getResource("action.json");
         JsonNode node = schemaValid.validate(content, "action");
 
     }
@@ -43,7 +43,7 @@ public class MockTests {
 
     @Test
     public void mockEventTest() throws Exception {
-        String content = util.getResource("as2-event.json");
+        String content = util.getResource("event.json");
         JsonNode node = schemaValid.validate(content, "event");
 
     }

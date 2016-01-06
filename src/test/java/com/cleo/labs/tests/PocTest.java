@@ -41,7 +41,7 @@ public class PocTest {
     // Disabled until schema validation succeeds
     @Test(enabled = false)
     public void liveCertTest() throws Exception {
-        String jsonRequest = util.getResource("as2-qa-test-certificate.json");
+        String jsonRequest = util.getResource("qa-test-certificate.json");
         JsonNode node = schemaValid.validate(httpRequest.Post(jsonRequest, 201, "/certs"), "certificate");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/certs/"), "certificate");
         httpRequest.Delete(node.get("id").asText(), 204, "/certs/");
