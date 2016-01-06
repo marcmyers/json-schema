@@ -1,0 +1,55 @@
+{
+  "id": "5PkZ0x0CQiC5vNTnEw8hUQ",
+  "alias": "newConnection",
+  "type": "ftp",
+  "active": true,
+  "editable": true,
+  "runnable": true,
+  "ready": false,
+  "notReadyReason": "Server Address is required.",
+  "enabled": "true",
+  "connect": {
+    "port": 21,
+    "dataChannel": {
+      "mode": "Passive",
+      "lowPort": 0,
+      "highPort": 0,
+      "useCommandAddress": false
+    },
+    "defaultContentType": "ASCII"
+  },
+  "outgoing": {
+    "partnerPackaging": false
+  },
+  "incoming": {
+    "partnerPackaging": false
+  },
+  "meta": {
+    "resourceType": "connection",
+    "created": "2016-01-06T20:31:24Z",
+    "lastModified": "2016-01-06T20:31:24Z",
+    "version": "1"
+  },
+  "_links": {
+    "self": {
+      "href": "/api/connections/5PkZ0x0CQiC5vNTnEw8hUQ"
+    },
+    "actions": [
+      {
+        "href": "/api/actions/q4NyZHghTeiWCjpV2ozqiA"
+      },
+      {
+        "href": "/api/actions/-q5v_64iSWGmN4t3Ev7X3Q"
+      },
+      {
+        "href": "/api/actions/5hBSFC8UR327m93HFK7Vdg"
+      }
+    ],
+    "clone": {
+      "href": "/api/connections/5PkZ0x0CQiC5vNTnEw8hUQ/clone"
+    },
+    "transfers": {
+      "href": "/api/connections/5PkZ0x0CQiC5vNTnEw8hUQ/transfers"
+    }
+  }
+}

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -29,13 +30,14 @@ public class SmokeTests {
     private static List<JsonNode> jsonNodes = new ArrayList<>();
 
     @BeforeTest
-    public static void beforeTest() {
-        util.testSetup("http://162.243.186.156:5080", "/api/", "administrator", "Admin");
+    @Parameters({"serverURL", "endpoint"})
+    public static void beforeTest(String serverURL, String endpoint) {
+        util.testSetup(serverURL, endpoint, "administrator", "Admin");
 
     }
 
     @Test()
-    public void connectSmoke() throws Exception{
+    public void as2ConSmoke() throws Exception{
         String jsonRequest = util.getResource("as2-basic-connection.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
@@ -46,8 +48,20 @@ public class SmokeTests {
     }
 
     @Test()
+    public void ftpConSmoke() throws Exception{
+        String jsonRequest = util.getResource("ftp-basic-connection.json");
+        System.out.println(jsonRequest);
+        String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
+        jsonNodes.add(new ObjectMapper().readTree(postResp));
+        JsonNode node = schemaValid.validate(postResp, "connection");
+        JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
+        httpRequest.Delete(getNode.get("id").asText(), 204, "/connections/");
+
+    }
+
+    @Test()
     public void genCertSmoke() throws Exception{
-        String jsonRequest = util.getResource("as2-qa-test-certificate.json");
+        String jsonRequest = util.getResource("qa-test-certificate.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/certs");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
         JsonNode node = schemaValid.validate(postResp, "certificate");
@@ -58,7 +72,7 @@ public class SmokeTests {
 
     @Test()
     public void importCertSmoke() throws Exception{
-        String jsonRequest = util.getResource("as2-import-certificate.json");
+        String jsonRequest = util.getResource("import-certificate.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/certs");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
         JsonNode node = schemaValid.validate(postResp, "certificate");
@@ -68,7 +82,7 @@ public class SmokeTests {
     }
 
     // You need to be able to POST a new connection to POST an action, so this will not run if the connection smoke test has failed
-    @Test(dependsOnMethods = {"connectSmoke"})
+    @Test(dependsOnMethods = {"as2ConSmoke"})
     public void actionSmoke() throws Exception{
         String jsonRequest = util.getResource("as2-basic-connection.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
@@ -77,7 +91,7 @@ public class SmokeTests {
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
 
         // Prep an action with the self url of the connection
-        JsonNode actionNode = new ObjectMapper().readTree(util.getResource("as2-action-request.json"));
+        JsonNode actionNode = new ObjectMapper().readTree(util.getResource("action-request.json"));
         ObjectNode actionRequest = (ObjectNode)actionNode;
         actionRequest.set("connection", getNode.get("_links").get("self"));
 

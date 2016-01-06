@@ -14,22 +14,29 @@ public class MockTests {
     static Utils util = new Utils();
 
     @Test
-    public void mockConTest() throws Exception {
+    public void mockAs2ConTest() throws Exception {
         String content = util.getResource("as2-connection.json");
         JsonNode node = schemaValid.validate(content, "connection");
 
     }
 
     @Test
+    public void mockFtpConTest() throws Exception {
+        String content = util.getResource("ftp-connection.json");
+        JsonNode node = schemaValid.validate(content, "connection");
+
+    }
+
+    @Test
     public void mockCertTest() throws Exception {
-        String content = util.getResource("as2-certificate.json");
+        String content = util.getResource("certificate.json");
         JsonNode node = schemaValid.validate(content, "certificate");
 
     }
 
     @Test
     public void mockActionTest() throws Exception {
-        String content = util.getResource("as2-action.json");
+        String content = util.getResource("action.json");
         JsonNode node = schemaValid.validate(content, "action");
 
     }
@@ -43,7 +50,7 @@ public class MockTests {
 
     @Test
     public void mockEventTest() throws Exception {
-        String content = util.getResource("as2-event.json");
+        String content = util.getResource("event.json");
         JsonNode node = schemaValid.validate(content, "event");
 
     }

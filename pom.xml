@@ -20,8 +20,36 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>${suiteXML}</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <systemProperties>
+                        <serverURL>${serverURL}</serverURL>
+                        <endpoint>${endpoint}</endpoint>
+                    </systemProperties>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <id>local-vagrant</id>
+            <properties>
+                <serverURL>http://localhost:5082</serverURL>
+                <endpoint>/api/</endpoint>
+                <suiteXML>src/test/resources/SmokeTest.xml</suiteXML>
+            </properties>
+        </profile>
+    </profiles>
 
     <distributionManagement>
         <repository>
@@ -61,7 +89,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jackson.version>2.6.0</jackson.version>
-        <cleo.version>5.2.1.0</cleo.version>
+        <cleo.version>5.3-SNAPSHOT</cleo.version>
     </properties>
 
     <dependencies>
