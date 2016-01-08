@@ -115,7 +115,7 @@ This example shows the use of the `JsonLoader` convenience wrapper, included wit
 
 This section details the day to day usage of the test project.
 
-### @BeforeTest ###
+### @BeforeTest testSetup ###
 
 This is a JUnit/TestNG annotation so that certain actions are performed before each test run. 
 In our case, it's used to Setup the default URL, API base path, and Preemptive Credentials to use throughout the test run.
@@ -123,8 +123,9 @@ In our case, it's used to Setup the default URL, API base path, and Preemptive C
 ```
 
     @BeforeTest
-    public static void testSetup() {
-        util.testSetup("http://localhost:5082", "/api/", "administrator", "Admin");
+    @Parameters({"serverURL", "endpoint"})
+    public static void beforeTest(String serverURL, String endpoint) {
+        util.testSetup(serverURL, endpoint, "administrator", "Admin");
 
     }
 
@@ -144,7 +145,7 @@ Here's the testSetup method that we're calling in @BeforeTest
 
 ```
 
-This way those values will only have to be set in one place before the test run. Eventually these values can/should come from a csv, data provider, maven test profile, and/or test.xml
+This way those values will only have to be set in one place before the test run. Some of these values come from the maven test profile and eventually the creds should come from a data provider so that other credential variations can be attempted.
 From this point on, to make a request you'll only need to provide the resource of the particular endpoint your trying to reach such as /connections or /certs. Further examples in the Http Requests section below.
 
 ### Http Requests ###
@@ -278,4 +279,49 @@ If you want to run a different suite file, use the following command specifying 
 
 ```
 mvn test -DsuiteXML=RegressionTest.xml
+```
+
+To better understand these parameters it's best to look at the maven surefire plugin and test profile:
+
+### Maven Surefire plugin ###
+
+This enables us to have the paremeterized maven test profiles: 
+
+```
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>${suiteXML}</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <systemProperties>
+                        <serverURL>${serverURL}</serverURL>
+                        <endpoint>${endpoint}</endpoint>
+                    </systemProperties>
+                </configuration>
+            </plugin>
+
+```
+
+### Default Test Profile ###
+
+```
+
+    <profiles>
+        <profile>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <id>local-vagrant</id>
+            <properties>
+                <serverURL>http://localhost:5082</serverURL>
+                <endpoint>/api/</endpoint>
+                <suiteXML>src/test/resources/SmokeTest.xml</suiteXML>
+            </properties>
+        </profile>
+    </profiles>
+
 ```

@@ -25,9 +25,9 @@ public class PocTest {
     static Utils util = new Utils();
 
     @BeforeTest
-    @Parameters({"url"})
-    public static void beforeTest(String url) {
-        util.testSetup(url, "/api/", "administrator", "Admin");
+    @Parameters({"serverURL", "endpoint"})
+    public static void beforeTest(String serverURL, String endpoint) {
+        util.testSetup(serverURL, endpoint, "administrator", "Admin");
 
     }
 
@@ -83,7 +83,7 @@ public class PocTest {
     Then, attempts to do a Put on the connection to make it ready
     */
     @Test
-    public void liveConPutTest() throws Exception {
+    public void as2PutTest() throws Exception {
         JSONObject newConnection = new JSONObject();
         newConnection.put("type", "as2");
 
@@ -125,5 +125,54 @@ public class PocTest {
         httpRequest.Get(putNode.get("id").asText(), 404, "/connections/");
 
     }
+
+    /*
+    POSTS a new ftp connection, GETs that connection, does a PUT on that connection to make it ready, then finally a DELETE to clean up
+    Throughout the returned JSON is being validated against the schemas
+    An extra GET was added to the end to ensure that the connection is deleted
+     */
+    public void ftpPutTest() throws Exception {
+        // Get the JSON we want to POST from a Json file
+        String jsonRequest = util.getResource("ftp-basic-connection.json");
+
+        // Attempt the post
+        String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
+
+        // Validate the Json returned against the appropriate schema
+        JsonNode postNode = schemaValid.validate(postResp, "connection");
+
+        // Attempt a get to verify that the connection was created
+        String getResp = httpRequest.Get(postNode.get("id").asText(), 200, "/connections/");
+
+        // Validate the Json returned against the appropriate schema
+        JsonNode getNode = schemaValid.validate(getResp, "connection");
+
+        // Verify content that is pertinent to the test, the connection should not be ready, we're going to make it ready through a PUT
+        Assert.assertEquals(getNode.get("ready").asText(), "false");
+        Assert.assertEquals(getNode.get("notReadyReason").asText(), "Server Address is required.");
+
+        // Prep an ObjectNode to do a PUT on the connection
+        ObjectNode postCon = (ObjectNode)getNode;
+        postCon.remove("meta");
+        postCon.putObject("connect").put("url", "http://localhost:5080/ftp");
+
+        // Attempt to do a PUT on the already POSTed connection to update the trading partner's URL, after that validate the Json returned against the schema
+        String putResp = httpRequest.Put(postCon, 200, "/connections/" + getNode.get("id").asText());
+        JsonNode putNode = schemaValid.validate(putResp, "connection");
+
+        // Verify that the content has changed due to the PUT after getting the connection again
+        String putGetResp = httpRequest.Get(putNode.get("id").asText(), 200, "/connections/");
+        JsonNode putGetNode = schemaValid.validate(putGetResp, "connection");
+        Assert.assertEquals(putGetNode.get("ready").asText(), "true");
+        Assert.assertEquals(putGetNode.get("connect").get("url").asText(), "http://localhost:5080/ftp");
+
+        // Attempt a DELETE to clean up after a test
+        httpRequest.Delete(putGetNode.get("id").asText(), 204, "/connections/");
+
+        // Attempt a final GET to ensure that it has been deleted
+        httpRequest.Get(putGetNode.get("id").asText(), 404, "/connections/");
+
+    }
+
 
 }
