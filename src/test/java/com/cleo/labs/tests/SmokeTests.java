@@ -44,6 +44,7 @@ public class SmokeTests {
         JsonNode node = schemaValid.validate(postResp, "connection");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
         httpRequest.Delete(getNode.get("id").asText(), 204, "/connections/");
+        httpRequest.Get(getNode.get("id").asText(), 404, "/connections/");
 
     }
 
@@ -56,6 +57,7 @@ public class SmokeTests {
         JsonNode node = schemaValid.validate(postResp, "connection");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
         httpRequest.Delete(getNode.get("id").asText(), 204, "/connections/");
+        httpRequest.Get(getNode.get("id").asText(), 404, "/connections/");
 
     }
 
@@ -67,6 +69,7 @@ public class SmokeTests {
         JsonNode node = schemaValid.validate(postResp, "certificate");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/certs/"), "certificate");
         httpRequest.Delete(node.get("id").asText(), 204, "/certs/");
+        httpRequest.Get(node.get("id").asText(), 404, "/certs/");
 
     }
 
@@ -78,6 +81,7 @@ public class SmokeTests {
         JsonNode node = schemaValid.validate(postResp, "certificate");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/certs/"), "certificate");
         httpRequest.Delete(node.get("id").asText(), 204, "/certs/");
+        httpRequest.Get(node.get("id").asText(), 404, "/certs/");
 
     }
 
@@ -98,7 +102,9 @@ public class SmokeTests {
         actionNode = schemaValid.validate(httpRequest.Post(actionRequest, 201, "/actions"), "action");
         JsonNode getActNode = schemaValid.validate(httpRequest.Get(actionNode.get("id").asText(), 200, "/actions/"), "action");
         httpRequest.Delete(actionNode.get("id").asText(), 204, "/actions/");
+        httpRequest.Get(actionNode.get("id").asText(), 404, "/actions/");
         httpRequest.Delete(node.get("id").asText(), 204, "/connections/");
+        httpRequest.Get(node.get("id").asText(), 404, "/connections/");
 
     }
 
