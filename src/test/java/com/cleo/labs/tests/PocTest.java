@@ -154,7 +154,8 @@ public class PocTest {
         // Prep an ObjectNode to do a PUT on the connection
         ObjectNode postCon = (ObjectNode)getNode;
         postCon.remove("meta");
-        postCon.putObject("connect").put("url", "http://localhost:5080/ftp");
+        postCon.putObject("connect").put("host", "localhost");
+        postCon.putObject("connect").put("username", "myTradingPartner");
 
         // Attempt to do a PUT on the already POSTed connection to update the trading partner's URL, after that validate the Json returned against the schema
         String putResp = httpRequest.Put(postCon, 200, "/connections/" + getNode.get("id").asText());
@@ -163,8 +164,11 @@ public class PocTest {
         // Verify that the content has changed due to the PUT after getting the connection again
         String putGetResp = httpRequest.Get(putNode.get("id").asText(), 200, "/connections/");
         JsonNode putGetNode = schemaValid.validate(putGetResp, "connection");
+
+        // Assert that all of our PUT values have changed
         Assert.assertEquals(putGetNode.get("ready").asText(), "true");
-        Assert.assertEquals(putGetNode.get("connect").get("url").asText(), "http://localhost:5080/ftp");
+        Assert.assertEquals(putGetNode.get("connect").get("host").asText(), "localhost");
+        Assert.assertEquals(putGetNode.get("connect").get("username").asText(), "myTradingPartner");
 
         // Attempt a DELETE to clean up after a test
         httpRequest.Delete(putGetNode.get("id").asText(), 204, "/connections/");
