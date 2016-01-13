@@ -156,6 +156,7 @@ public class PocTest {
         postCon.remove("meta");
         postCon.putObject("connect").put("host", "localhost");
         postCon.putObject("connect").put("username", "myTradingPartner");
+        postCon.putObject("connect").put("password", "cleo");
 
         // Attempt to do a PUT on the already POSTed connection to update the trading partner's URL, after that validate the Json returned against the schema
         String putResp = httpRequest.Put(postCon, 200, "/connections/" + getNode.get("id").asText());
