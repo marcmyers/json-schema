@@ -34,7 +34,7 @@ public class PocTest {
     // POSTS a new connection using a JSON file and validates the schema
     @Test
     public void liveConPostTest() throws Exception {
-        String jsonRequest = util.getResource("as2-basic-connection.json");
+        String jsonRequest = util.getResource("json/as2-connection-type-request.json");
         JsonNode node = schemaValid.validate(httpRequest.Post(jsonRequest, 201, "/connections"), "connection");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
         httpRequest.Delete(getNode.get("id").asText(), 204, "/connections/");
@@ -45,7 +45,7 @@ public class PocTest {
     // Disabled until schema validation succeeds
     @Test(enabled = false)
     public void liveCertTest() throws Exception {
-        String jsonRequest = util.getResource("qa-test-certificate.json");
+        String jsonRequest = util.getResource("json/qa-test-certificate.json");
         JsonNode node = schemaValid.validate(httpRequest.Post(jsonRequest, 201, "/certs"), "certificate");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/certs/"), "certificate");
         httpRequest.Delete(node.get("id").asText(), 204, "/certs/");
@@ -133,7 +133,7 @@ public class PocTest {
      */
     public void ftpPutTest() throws Exception {
         // Get the JSON we want to POST from a Json file
-        String jsonRequest = util.getResource("ftp-basic-connection.json");
+        String jsonRequest = util.getResource("json/ftp-connection-type-request.json");
 
         // Attempt the post
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");

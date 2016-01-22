@@ -38,7 +38,7 @@ public class SmokeTests {
 
     @Test()
     public void as2ConSmoke() throws Exception{
-        String jsonRequest = util.getResource("as2-basic-connection.json");
+        String jsonRequest = util.getResource("json/as2-connection-type-request.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
         JsonNode node = schemaValid.validate(postResp, "connection");
@@ -50,7 +50,7 @@ public class SmokeTests {
 
     @Test()
     public void ftpConSmoke() throws Exception{
-        String jsonRequest = util.getResource("ftp-basic-connection.json");
+        String jsonRequest = util.getResource("json/ftp-connection-type-request.json");
         System.out.println(jsonRequest);
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
@@ -63,7 +63,7 @@ public class SmokeTests {
 
     @Test()
     public void genCertSmoke() throws Exception{
-        String jsonRequest = util.getResource("qa-test-certificate.json");
+        String jsonRequest = util.getResource("json/qa-test-certificate.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/certs");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
         JsonNode node = schemaValid.validate(postResp, "certificate");
@@ -75,7 +75,7 @@ public class SmokeTests {
 
     @Test()
     public void importCertSmoke() throws Exception{
-        String jsonRequest = util.getResource("import-certificate.json");
+        String jsonRequest = util.getResource("json/import-certificate.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/certs");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
         JsonNode node = schemaValid.validate(postResp, "certificate");
@@ -86,16 +86,16 @@ public class SmokeTests {
     }
 
     // You need to be able to POST a new connection to POST an action, so this will not run if the connection smoke test has failed
-    @Test(dependsOnMethods = {"as2ConSmoke"})
+    @Test(dependsOnMethods = {"as2ConSmoke"}, enabled=false)
     public void actionSmoke() throws Exception{
-        String jsonRequest = util.getResource("as2-basic-connection.json");
+        String jsonRequest = util.getResource("json/as2-connection-type-request.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
         jsonNodes.add(new ObjectMapper().readTree(postResp));
         JsonNode node = schemaValid.validate(postResp, "connection");
         JsonNode getNode = schemaValid.validate(httpRequest.Get(node.get("id").asText(), 200, "/connections/"), "connection");
 
         // Prep an action with the self url of the connection
-        JsonNode actionNode = new ObjectMapper().readTree(util.getResource("action-request.json"));
+        JsonNode actionNode = new ObjectMapper().readTree(util.getResource("json/action-request.json"));
         ObjectNode actionRequest = (ObjectNode)actionNode;
         actionRequest.set("connection", getNode.get("_links").get("self"));
 
@@ -111,11 +111,7 @@ public class SmokeTests {
     @AfterTest
     public void cleanUp() throws Exception{
         // Makes sure that no matter how the test run goes that it attempts to cleanup after itself
-        for (JsonNode node : jsonNodes) {
-            given().and().delete("/connections/" + node.get("id").asText());
-            given().and().delete("/certs/" + node.get("id").asText());
-
-        }
+        util.cleanUp(jsonNodes);
 
     }
 

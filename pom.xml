@@ -26,7 +26,7 @@
                 <version>2.18.1</version>
                 <configuration>
                     <suiteXmlFiles>
-                        <suiteXmlFile>${suiteXML}</suiteXmlFile>
+                        <suiteXmlFile>src/test/resources/suites/${suiteXML}</suiteXmlFile>
                     </suiteXmlFiles>
                     <systemProperties>
                         <serverURL>${serverURL}</serverURL>
@@ -46,7 +46,7 @@
             <properties>
                 <serverURL>http://localhost:5082</serverURL>
                 <endpoint>/api/</endpoint>
-                <suiteXML>src/test/resources/SmokeTest.xml</suiteXML>
+                <suiteXML>SmokeTest.xml</suiteXML>
             </properties>
         </profile>
     </profiles>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<suite name="FtpTests" parallel="classes" thread-count="1">
+    <test name="FtpTests">
+        <echo>serverURL:${serverURL}</echo>
+        <echo>endpoint:${endpoint}</echo>
+        <classes>
+            <class name="com.cleo.labs.tests.FtpTests"></class>
+        </classes>
+    </test>
+</suite>
