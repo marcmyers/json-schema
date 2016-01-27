@@ -43,7 +43,7 @@ public class PocTest {
 
     // Generates a new certificate using a request from a json file and then attempts to delete it
     // Disabled until schema validation succeeds
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void liveCertTest() throws Exception {
         String jsonRequest = util.getResource("json/qa-test-certificate.json");
         JsonNode node = schemaValid.validate(httpRequest.Post(jsonRequest, 201, "/certs"), "certificate");
@@ -54,7 +54,7 @@ public class PocTest {
 
     // Generates a new certificate using a request generated from a JSON Object and then attempts to delete it
     // Disabled until schema validation succeeds
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void liveCertTestJsonObject() throws Exception {
         List<String> keyUsage = new ArrayList<String>();
         keyUsage.add("digitalSignature");

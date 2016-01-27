@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 /**
  * Created by mmyers on 10/30/2015.
  */
+// TODO: Find new valid Json examples to test here, mock server is a good source
 // These methods are intended to gut check our schema validation against JSON files
 public class MockTests {
     static SchemaValidation schemaValid = new SchemaValidation();
@@ -20,7 +21,8 @@ public class MockTests {
 
     }
 
-    @Test
+    //TODO: enable once ftp/sftp is merged into develop and the schemas are updated
+    @Test(enabled=false)
     public void mockFtpConTest() throws Exception {
         String content = util.getResource("json/ftp-connection.json");
         JsonNode node = schemaValid.validate(content, "connection");

@@ -1,0 +1,9 @@
+{
+  "alias":"clean_boxes",
+  "enabled":true,
+  "commands": [
+    "LDELETE ../sentbox/*",
+    "LDELETE ../inbox/*",
+    "LDELETE ../outbox/*"
+  ]
+}

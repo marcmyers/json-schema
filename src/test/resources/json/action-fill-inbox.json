@@ -1,0 +1,7 @@
+{
+  "alias":"fill_inbox",
+  "enabled":true,
+  "commands": [
+    "LCOPY ../outbox/test/* ../inbox/"
+  ]
+}

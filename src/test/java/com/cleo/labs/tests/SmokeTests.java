@@ -36,7 +36,7 @@ public class SmokeTests {
 
     }
 
-    @Test()
+    @Test(enabled=true)
     public void as2ConSmoke() throws Exception{
         String jsonRequest = util.getResource("json/as2-connection-type-request.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");
@@ -48,7 +48,7 @@ public class SmokeTests {
 
     }
 
-    @Test()
+    @Test(enabled=true)
     public void ftpConSmoke() throws Exception{
         String jsonRequest = util.getResource("json/ftp-connection-type-request.json");
         System.out.println(jsonRequest);
@@ -61,7 +61,7 @@ public class SmokeTests {
 
     }
 
-    @Test()
+    @Test(enabled=true)
     public void genCertSmoke() throws Exception{
         String jsonRequest = util.getResource("json/qa-test-certificate.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/certs");
@@ -86,7 +86,7 @@ public class SmokeTests {
     }
 
     // You need to be able to POST a new connection to POST an action, so this will not run if the connection smoke test has failed
-    @Test(dependsOnMethods = {"as2ConSmoke"}, enabled=false)
+    @Test(dependsOnMethods = {"as2ConSmoke"}, enabled=true)
     public void actionSmoke() throws Exception{
         String jsonRequest = util.getResource("json/as2-connection-type-request.json");
         String postResp = httpRequest.Post(jsonRequest, 201, "/connections");

@@ -1,0 +1,10 @@
+{
+  "type":"ftp",
+  "enabled":"true",
+  "connect":{
+    "port":5021,
+    "host":"localhost",
+    "username":"myTradingPartner",
+    "password":"cleo"
+  }
+}
