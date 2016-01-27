@@ -4,8 +4,8 @@
         <echo>serverURL:${serverURL}</echo>
         <echo>endpoint:${endpoint}</echo>
         <classes>
-            <class name="com.cleo.labs.tests.FtpTests"></class>
-            <class name="com.cleo.labs.tests.SftpTests"></class>
+            <class name="com.cleo.automation.tests.FtpTests"></class>
+            <class name="com.cleo.automation.tests.SftpTests"></class>
         </classes>
     </test>
 </suite>

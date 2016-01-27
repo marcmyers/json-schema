@@ -1,7 +1,7 @@
-package com.cleo.labs.tests;
+package com.cleo.automation.tests;
 
-import com.cleo.labs.json_schema.SchemaValidation;
-import com.cleo.labs.json_schema.Utils;
+import com.cleo.automation.utility.SchemaValidation;
+import com.cleo.automation.utility.Utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.testng.annotations.Test;
 

@@ -26,7 +26,7 @@
                 <version>2.18.1</version>
                 <configuration>
                     <suiteXmlFiles>
-                        <suiteXmlFile>src/test/resources/suites/${suiteXML}</suiteXmlFile>
+                        <suiteXmlFile>src/main/resources/suites/${suiteXML}</suiteXmlFile>
                     </suiteXmlFiles>
                     <systemProperties>
                         <serverURL>${serverURL}</serverURL>

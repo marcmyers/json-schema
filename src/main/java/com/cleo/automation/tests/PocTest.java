@@ -1,8 +1,8 @@
-package com.cleo.labs.tests;
+package com.cleo.automation.tests;
 
-import com.cleo.labs.json_schema.HttpRequest;
-import com.cleo.labs.json_schema.SchemaValidation;
-import com.cleo.labs.json_schema.Utils;
+import com.cleo.automation.utility.HttpRequest;
+import com.cleo.automation.utility.SchemaValidation;
+import com.cleo.automation.utility.Utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.lang3.RandomStringUtils;

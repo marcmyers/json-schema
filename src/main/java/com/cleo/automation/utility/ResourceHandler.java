@@ -1,4 +1,4 @@
-package com.cleo.labs.json_schema;
+package com.cleo.automation.utility;
 
 import com.google.common.io.Resources;
 

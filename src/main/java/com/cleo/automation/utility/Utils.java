@@ -1,4 +1,4 @@
-package com.cleo.labs.json_schema;
+package com.cleo.automation.utility;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.response.Response;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.List;
