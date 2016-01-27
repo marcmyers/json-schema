@@ -1,0 +1,11 @@
+{
+  "alias":"readySftpConnection",
+  "type":"sftp",
+  "enabled":"true",
+  "connect":{
+    "port":5022,
+    "host":"localhost",
+    "username":"myTradingPartner",
+    "password":"cleo"
+  }
+}

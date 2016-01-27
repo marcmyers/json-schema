@@ -5,6 +5,7 @@
         <echo>endpoint:${endpoint}</echo>
         <classes>
             <class name="com.cleo.labs.tests.FtpTests"></class>
+            <class name="com.cleo.labs.tests.SftpTests"></class>
         </classes>
     </test>
 </suite>
